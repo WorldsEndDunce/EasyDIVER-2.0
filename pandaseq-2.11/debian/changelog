@@ -1,0 +1,154 @@
+pandaseq (2.11~ppa0) trusty; urgency=medium
+
+  * Allow parsing converted CASAVA headers
+  * Include static libraries in development package
+
+ -- Andre Masella <andre@masella.name>  Fri, 03 Mar 2017 11:50:39 -0500
+
+pandaseq (2.10~ppa0) trusty; urgency=medium
+
+  * Fix buffer overrun during parsing
+  * Add a primer filter module
+  * Fix -module flag in pandaxs
+
+ -- Andre Masella <andre@masella.name>  Wed, 29 Jun 2016 06:37:29 -0400
+
+pandaseq (2.9~ppa0) trusty; urgency=medium
+
+  * Skip read pairs with no sequence
+  * Do not free an empty line buffer.
+  * Allow reading separate index reads
+  * Miscellaneous bug fixes
+
+ -- Andre Masella <andre@masella.name>  Sun, 05 Jul 2015 07:38:20 -0400
+
+pandaseq (2.8~ppa2) precise; urgency=medium
+
+  * Fix copy-pasta in UPARSE
+
+ -- Andre Masella <andre@masella.name>  Fri, 07 Nov 2014 09:58:23 -0500
+
+pandaseq (2.8~ppa1) precise; urgency=medium
+
+  * Fix packaging error
+
+ -- Andre Masella <andre@masella.name>  Fri, 07 Nov 2014 06:23:57 -0500
+
+pandaseq (2.8~ppa0) precise; urgency=medium
+
+  * Add a plugin to display overlaps examined
+  * Add -D flag to add a penalty for shifting primers
+  * Added UPARSE algorithm
+  * Add FastqJoin algorithm
+  * Add FLASH algorithm
+  * Add Sitch algorithm
+  * Fix bug causing spurious “no sequences” with one thread
+  * Issue an error if the command line arguments have UTF-8 characters
+  * Remove min_readqscore since it doesn't work as advertised
+  * Sanity check sequence length after primer stripping
+
+ -- Andre Masella <andre@masella.name>  Thu, 06 Nov 2014 10:12:31 -0500
+
+pandaseq (2.7~ppa0) precise; urgency=low
+
+  * Supress warning about PHRED+64 when the header is CASAVA 1.7+
+  * Fix stack corruption causing crashes
+  * Add support for EBI SRA header formats
+  * Set the maximum overlap back to read length
+  * Allow restricting the maximum overlap length
+  * Deal with DOS formatted files gracefully
+  * Fix probability to PHRED conversion
+  * Add a program to compare differening conditions
+  * Fix RDP scoring algorithm
+
+ -- Andre Masella <andre@masella.name>  Sat, 22 Mar 2014 12:17:17 -0700
+
+pandaseq (2.6~ppa0) precise; urgency=low
+
+  * New alignment algorithms: RDP maximum likehood and PEAR
+  * New filters: PEAR statistical test, the bits saved in the overlap region,
+    the read Q score, and the minimum PHRED quality score
+  * Detect compression automatically.
+  * Allow writing failed alignments with quality information (-U).
+  * Parse sequence headers from the Short Read Archive
+  * Make sure to preserve custom k-mer table size when threaded.
+  * Fix LTDL unreferencing bug where non-loaded modules would incorrectly decrement
+    the LTDL reference count, causing breakage of still-loaded modules.
+
+ -- Andre Masella <andre@masella.name>  Tue, 14 Jan 2014 21:08:34 -0800
+
+pandaseq (2.5~ppa0) lucid; urgency=low
+
+  * Add support for output and log files via Writer
+  * Add thread-friendly output writing system
+  * Added asynchronous reader to improve input read speed
+  * Added support for reads which overhang
+  *	Fix memory allocation bug in when minoverlap specified by the user is
+    greater than either of the input sequences.
+  * Salvage extra sequences when a minimum overlap is applied.
+  * Updated checkid to include CASAVA version
+  * Collect information about sequences that fail to assemble by hashing
+
+ -- Andre Masella <andre@masella.name>  Thu, 15 Aug 2013 21:27:52 -0700
+
+pandaseq (2.4~ppa0) lucid; urgency=low
+
+  * Allow stripping primers after assembly
+  * Round more in generously in FASTQ output
+  * Fix bug causing incorrect selection of bases based on quality score
+  * Avoid spurious warning about PHRED scores
+  * Added a feature to dump unaligned sequences
+  * Added a command-line sequence ID checker
+
+ -- Andre Masella <andre@masella.name>  Wed, 30 Jan 2013 19:17:02 -0800
+
+pandaseq (2.3~ppa1) precise; urgency=low
+
+  * Fixed packaging problem causing libpandaseq[01] to collide
+
+ -- Andre Masella <andre@masella.name>  Tue, 30 Oct 2012 10:42:40 -0700
+
+pandaseq (2.3~ppa0) lucid; urgency=low
+
+  * Fixed bug causing the -N flag to be ignored.
+  * Add option not to include tag in parsing Illumina headers.
+  * Add panda_assembler_foreach_module callback interface to library.
+  * Changed PANDA_MAX_LEN handling in library.
+  * Added module documentation in man page
+  * Fixed up k-mer bit array handling (causing wasted time).
+  * Added a sanity check to throw out unusably short reads.
+  * Fixed default minimum overlap.
+  * Ensure quality score are in the valid range.
+
+ -- Andre Masella <andre@masella.name>  Fri, 26 Oct 2012 13:48:45 -0700
+
+pandaseq (2.2~ppa0) precise; urgency=low
+
+  * Created a debug package for Debian
+  * Improve debugging/logging control (now controllable by flags)
+  * Fixed memory leaks
+  * Add a plugin to allow kicking out sequences with overlap errors
+    (completely_miss_the_point)
+  * Require only one of check/precheck in modules
+  * Support for multithreading
+  * Added a library function to clone assembler configurations
+  * Fixed bug causing segfault if a module failed to load
+  * Include command line arguments in log
+  * Provide count the number of mismatches in the overlap region
+  * Adds a panda_assembler_assemble to assemble a one-off sequence
+
+ -- Andre Masella <andre@masella.name>  Mon, 13 Aug 2012 18:37:33 -0400
+
+pandaseq (2.1~ppa0) lucid; urgency=low
+
+  * Allow Illumina tag lengths to be up to 50nt
+  * Created a library interface for PANDAseq
+  * Improved pandaxs and module system
+
+ -- Andre Masella <andre@masella.name>  Wed, 25 Apr 2012 20:56:28 -0700
+
+pandaseq (2.0~ppa0) lucid; urgency=low
+
+  * First version in C
+
+ -- Andre Masella <andre@masella.name>  Thu, 14 Apr 2011 12:23:33 -0400

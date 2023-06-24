@@ -1,0 +1,41 @@
+#!@SHELL@
+
+for each
+do
+	if [[ "${each}" == -* ]]
+	then
+		PT="${PT} ${each}"
+	else
+		if [ "x${SRC}" = x ]
+		then
+			SRC="${each}"
+			MOD=$(basename "${each}" .c)
+		else
+			SRC="${SRC} ${each}"
+		fi
+	fi
+done
+
+if [ "x${SRC}" = x ]
+then
+	echo "Error: No C file provided."
+	echo "Usage: $0 module.c supplementary.c -lextralib ..."
+	exit 1
+fi
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+LO_FILES=""
+for each in @includedir@/@LIB_NAME@/panda_api.c $SRC
+do
+	LO="${MOD}-$(basename "${each}.lo")"
+	@MODULE_LIBTOOL@ --tag=CC --mode=compile @CC@ -DPANDASEQ_MODULE=$MOD @DEFS@ -I@includedir@/@LIB_NAME@ @MODULE_CFLAGS@ -c -o "$LO" "$each" $PT || exit 1
+	LO_FILES="$LO_FILES $LO"
+done
+@MODULE_LIBTOOL@ --tag=CC --mode=link @CC@ -module @MODULE_CFLAGS@ -export-dynamic -export-symbols-regex "^${MOD}_LTX_" @MODULE_LDFLAGS@ -rpath @libdir@/@PACKAGE@@LIB_MAJOR@ -o "${MOD}.la" $LO_FILES $PT || exit 1
+if [ -d "@libdir@/@PACKAGE@@LIB_MAJOR@" -a -w "@libdir@/@PACKAGE@@LIB_MAJOR@" ]
+then
+	@MODULE_LIBTOOL@ --mode=install @INSTALL@  "${MOD}.la" "@libdir@/@PACKAGE@@LIB_MAJOR@/${MOD}.la"
+else
+	echo To install: sudo @MODULE_LIBTOOL@ --mode=install @INSTALL@  "${MOD}.la" "@libdir@/@PACKAGE@@LIB_MAJOR@/${MOD}.la"
+fi

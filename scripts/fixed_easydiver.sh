@@ -428,7 +428,7 @@ if [ -z $prot ];
 	# Translat into aa
 	echo "Translating ${file//_counts.txt} DNA to peptides..."
 	echo $pwd
-	python3 ../../../translator.py $file
+	python ../../../translator.py $file 
 	
 	# Print in new file every line except the first 3 (2 with the number of molecules and sequences and town empty lines):
 	tail -n +4 ${file//_counts.txt}'_counts.aa.dup.txt' | sort > newfile.txt;
