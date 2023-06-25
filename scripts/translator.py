@@ -1,7 +1,13 @@
+'''
+translator.py is a script that translates DNA sequences into amino acid sequences using a genetic code
+dictionary gencode. It takes an input file containing DNA sequences and their corresponding abundances
+and generates an output file containing the translated amino acid sequences, their abundances, and
+relative percentages.
+'''
 from __future__ import print_function
 import sys
 
-#genetic code
+# Dict maps each DNA codon (sequence of three nucleotides) to corresponding amino acid
 gencode = {
     'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
     'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K', 'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
@@ -12,11 +18,19 @@ gencode = {
     'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S', 'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
     'TAC':'Y', 'TAT':'Y', 'TAA':'_', 'TAG':'_', 'TGC':'C', 'TGT':'C', 'TGA':'_', 'TGG':'W'}
  
-# a function to translate a single codon
+'''
+This function translate_codon translates a single codon to corresponding amino acid
+Input: codon to be translated
+Output: character representing amino acid, 'x' if not found in the gencode dictionary
+'''
 def translate_codon(codon):
     return gencode.get(codon.upper(), 'x')
  
-# a function to split a sequence into codons
+'''
+split_into_codons splits a DNA sequence into codons based on a given reading frame.
+Input: DNA sequence to be split (dna), int starting position (frame) between 1-3, inclusive
+Output: A list of 3-character strings representing codons
+'''
 def split_into_codons(dna, frame):
     codons = []
     for i in range(frame - 1, len(dna)-2, 3):
@@ -24,7 +38,11 @@ def split_into_codons(dna, frame):
         codons.append(codon)
     return codons
  
-# a function to translate a dna sequence in a single frame
+'''
+This function translates a DNA sequence into an amino acid sequence using reading frame 1.
+Input: DNA sequence to be translated (dna)
+Output: String representing amino acids
+'''
 def translate_dna_single(dna, frame=1):
     codons = split_into_codons(dna, frame)
     amino_acids = ''
@@ -36,10 +54,10 @@ def translate_dna_single(dna, frame=1):
         	amino_acids = amino_acids + translate_codon(codon)
     return amino_acids
 
- #input file name
-f_name_in= sys.argv[1]    
-#output file name
+#input file name
+f_name_in= sys.argv[1]
 
+#output file name
 f_name_out=  f_name_in.split(".")[0] + ".aa.dup.txt"
 f_out=open(f_name_out, 'w') 
 
