@@ -1,5 +1,16 @@
-![EasyDIVER Logo](logo.png)
+# Dependencies Addendum
+I was struggling to install the required dependencies. But for Windows (Ubuntu), I have found that the following steps work:
+1. Visit the Microconda page (https://docs.conda.io/en/latest/miniconda.html#linux-installers), and copy the link that matches your system.
+2. `wget <PASTE_LINK_ADDRESS>`
+3. `bash <MINICONDA_INSTALLER>`
+4. `conda activate` <br>
+   `conda config --add channels bioconda` <br>
+    `conda install pandaseq`
+5. Now, `pip install numpy`, and you're hopefully set.
 
+From the original README:
+
+![EasyDIVER Logo](logo.png)
 
 # EasyDIVER
 This is the README document for the EasyDIVERS pipeline for pre-processing HTS reads from _in vitro_ selection experiments. The pipeline can be used to process nucleotides or amino acids sequencing data.
