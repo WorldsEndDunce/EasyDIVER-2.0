@@ -6,7 +6,10 @@ I was struggling to install the required dependencies. But for Windows (Ubuntu),
 4. `conda activate` <br>
    `conda config --add channels bioconda` <br>
     `conda install pandaseq`
-5. Now, `pip install numpy`, and you're hopefully set.
+5. Now, `pip install numpy` (and follow the original dependencies notes).
+
+# Testing
+Run `./easydiver.sh -i ./data -o ./output -p GGCGGAAAGCACATCTGC -T 14 -a -r`
 
 From the original README:
 

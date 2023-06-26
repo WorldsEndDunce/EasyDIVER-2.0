@@ -1,2 +1,0 @@
-number of unique sequences = 0
-total number of molecules =

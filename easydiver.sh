@@ -2,12 +2,18 @@
 #!/bin/bash
 
 # This is EasyDIVER, a pipeline for Easy pre-processing and Dereplication of In Vitro Evolution Reads
-
 # by Sam Verbanic and Celia Blanco
 # contact: samuel.verbanic@lifesci.ucsb.edu or cblanco@chem.ucsb.edu
 # Dependencies:
 	# pandaseq
 	# python
+:<<EOF
+easydiver.sh is a Bash script that takes input files in fastq format and performs various processing
+steps on them. It accepts command-line arguments for specifying input and output directories, forward and
+reverse primer sequences, number of threads, extra flags for PANDASeq, translation into amino acids, and retaining
+individual line outputs.
+EOF
+
 
 usage="USAGE: bash easydiver.sh -i [-o -p -q -r -T -h -a -e]
 where:
@@ -567,4 +573,4 @@ end=`date +%s`
 # Calculate run time
 runtime=$((end-start))
 echo ""
-echo "Run time:" $runtime
+echo "Run time:" $runtime "s"
