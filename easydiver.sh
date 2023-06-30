@@ -30,10 +30,6 @@ where:
 	-i input directory filepath
         
 	OPTIONAL
-	(inputs)
-	-n negative control input directory filepath
-
-	(other)
 	-o output directory filepath
 	-p forward primer sequence for extraction
 	-q reverse primer sequence for extraction
@@ -72,7 +68,7 @@ h) helpm="TRUE"
 	printf "%`tput cols`s"|tr ' ' '#'
 	exit 1;;
 i) inopt=${OPTARG};;
-n) negopt=${OPTARG};;
+# n) negopt=${OPTARG};;
 o) outopt="${OPTARG}.$(date +%Y%m%d_%H%M%S)";;
 p) fwd=${OPTARG};;
 q) rev=${OPTARG};;
@@ -122,7 +118,7 @@ fi
 # Argument report
 # Check arguments, print, exit if necessary w/ message
 
-if [ -z "$inopt" ] && [ -z "$negopt" ] && [ -z "$outopt" ] && [ -z $fwd ] && [ -z $rev] && [ -z $threads ] && [ -z $extra ] && [ -z $prot ] && [ -z $slanes ];
+if [ -z "$inopt" ] && [ -z "$outopt" ] && [ -z $fwd ] && [ -z $rev] && [ -z $threads ] && [ -z $extra ] && [ -z $prot ] && [ -z $slanes ]; # flag edit line
 	then
 		echo ""
 		echo "${bold}NO FLAGS PROVIDED. ENTERING PROMPTED INPUT VERSION${normal}"

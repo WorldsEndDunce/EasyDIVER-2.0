@@ -1,12 +1,14 @@
 import os
+import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
+
+sns.set(style="darkgrid")
+
 # TODO: total aa, unique aa, unique bio aa over time
 # Read the histogram data from the text file
-folder_path = "data\demo_output"  # TODO: Automate filename?
+folder_path = "large_output"  # TODO: Automate filename?
 histos = os.path.join(folder_path, "histos")
 files = [file for file in os.listdir(histos) if file.endswith(".txt")]
-
 
 for file in files:
     filename = os.path.join(histos, file)
@@ -24,24 +26,26 @@ for file in files:
         reads_count = int(values[1])
         lengths.append(length)
         reads_counts.append(reads_count)
-
+    plt.figure(figsize=(12, 8))
     # Plotting the histogram without log scale
     plt.subplot(2, 1, 1)
-    plt.bar(lengths, reads_counts)
+    plt.bar(lengths, reads_counts, color="steelblue")
     plt.xlabel('Length')
     plt.ylabel('Reads Count')
     plt.title('Read Length Histogram for ' + file)
 
     # Plotting the histogram with log scale
     plt.subplot(2, 1, 2)
-    plt.bar(lengths, reads_counts)
+    plt.bar(lengths, reads_counts, color="steelblue")
     plt.xlabel('Length')
     plt.ylabel('Reads Count')
     plt.title('Read Length Histogram (Log Scale)')
     plt.yscale('log')  # Log scale the y-axis
 
     plt.tight_layout()  # Adjust spacing between subplots
-    plt.show()
+    # plt.show()
+    plt.savefig("figures/" + file[:file.rfind(".")] + ".png", dpi=500)
+    plt.close()
 
 file_path = folder_path + "/log.txt"
 
@@ -64,16 +68,18 @@ with open(file_path, 'r') as file:
             max_round = max(max_round, int(line_data[0].split("-")[0]))
             unique_aa.setdefault(line_data[0].split("-")[1], []).append(int(line_data[-2])) # TODO: Don't hardcode?
             total_aa.setdefault(line_data[0].split("-")[1], []).append(int(line_data[-1]))
+
+print("Unique amino acid (AA) counts throughout rounds: " + str(unique_aa))
+print("Total amino acid (AA) counts throughout rounds: " + str(total_aa))
 # Plot the data
-print(unique_aa)
-print(total_aa)
 plt.figure(figsize=(10, 6))
+
 for key in unique_aa.keys():
-    color="orange"
-    if key=="neg":
-        color="green"
-        unique_aa[key] = np.array(unique_aa[key]) + 150
-        total_aa[key] = np.array(total_aa[key]) + 150
+    color = "orange"
+    if key == "neg":
+        color = "green"
+    elif key == "in":
+        color = "red"
     label_u = "Unique AA " + key
     label_t = "Total AA " + key
     plt.plot(unique_aa[key], marker="o", label=label_u, color=color)
@@ -85,4 +91,5 @@ plt.title('Unique and Total Amino Acid Counts Throughout Experiment')
 plt.legend()
 plt.xticks(range(0, max_round), [f'#{i}' for i in range(1, max_round + 1)], rotation=45)
 plt.tight_layout()
-plt.show()
+# plt.show()
+plt.savefig("figures/aa.png", dpi=500)
