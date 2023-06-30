@@ -1,10 +1,12 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 # TODO: total aa, unique aa, unique bio aa over time
 # Read the histogram data from the text file
-folder_path = "(successful) output.20230625_055402"  # TODO: Automate filename
+folder_path = "data\demo_output"  # TODO: Automate filename?
 histos = os.path.join(folder_path, "histos")
 files = [file for file in os.listdir(histos) if file.endswith(".txt")]
+
 
 for file in files:
     filename = os.path.join(histos, file)
@@ -45,28 +47,42 @@ file_path = folder_path + "/log.txt"
 
 # Lists to store the data
 sample_names = []
-unique_aa = []
-total_aa = []
-
+unique_aa = {}
+total_aa = {}
+max_round = -1
 # Read the text file and extract the data
 with open(file_path, 'r') as file:
     lines = file.readlines()
+    start = False
     for line in lines:
-        if line.startswith('test'):
+        if line.startswith("sample"):
+            start = True
+            continue
+        elif start:
             line_data = line.split()
             sample_names.append(line_data[0])
-            unique_aa.append(int(line_data[-3]))
-            total_aa.append(int(line_data[-2]))
-
+            max_round = max(max_round, int(line_data[0].split("-")[0]))
+            unique_aa.setdefault(line_data[0].split("-")[1], []).append(int(line_data[-2])) # TODO: Don't hardcode?
+            total_aa.setdefault(line_data[0].split("-")[1], []).append(int(line_data[-1]))
 # Plot the data
-
+print(unique_aa)
+print(total_aa)
 plt.figure(figsize=(10, 6))
-plt.plot(sample_names, unique_aa, marker='o', label='Unique AA')
-plt.plot(sample_names, total_aa, marker='o', label='Total AA')
+for key in unique_aa.keys():
+    color="orange"
+    if key=="neg":
+        color="green"
+        unique_aa[key] = np.array(unique_aa[key]) + 150
+        total_aa[key] = np.array(total_aa[key]) + 150
+    label_u = "Unique AA " + key
+    label_t = "Total AA " + key
+    plt.plot(unique_aa[key], marker="o", label=label_u, color=color)
+    plt.plot(total_aa[key], marker="o", label=label_t, color=color)
+
 plt.xlabel('Round')
 plt.ylabel('Count')
 plt.title('Unique and Total Amino Acid Counts Throughout Experiment')
 plt.legend()
-plt.xticks(range(0, len(sample_names)), [f'#{i}' for i in range(1, len(sample_names) + 1)], rotation=45)
+plt.xticks(range(0, max_round), [f'#{i}' for i in range(1, max_round + 1)], rotation=45)
 plt.tight_layout()
 plt.show()
