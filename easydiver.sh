@@ -16,8 +16,12 @@ EOF
 
 # Set home directory
 hdir=$(dirname "$0")
+<<<<<<< HEAD
 # TODO: Check for negative control within the input directory and remove flags (search if neg anywhere in the name)
 # TODO: Sequential logic 1-, 2- etc. to compare between rounds, this also ensures in-order lanes
+=======
+
+>>>>>>> 67042fff64211af8065e0111635aa5604da721e4
 usage="USAGE: bash easydiver.sh -i [-n -o -p -q -r -T -h -a -e]
 where:
 	REQUIRED
