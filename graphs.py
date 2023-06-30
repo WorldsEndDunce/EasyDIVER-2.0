@@ -83,7 +83,7 @@ for key in unique_aa.keys():
     label_u = "Unique AA " + key
     label_t = "Total AA " + key
     plt.plot(unique_aa[key], marker="o", label=label_u, color=color)
-    plt.plot(total_aa[key], marker="o", label=label_t, color=color)
+    plt.plot(total_aa[key], marker="o", label=label_t, color="dark" + color)
 
 plt.xlabel('Round')
 plt.ylabel('Count')
