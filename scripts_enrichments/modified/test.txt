@@ -1,0 +1,55 @@
+number of unique sequences fus / neg / post = 352064 / 249208 / 267119
+total number of molecules fus / neg / post = 695951 / 540143 / 561238
+rank      
+seq                                                                                                                                                                                     
+a_cDNA     f_cDNA              
+a_cDNA_l   f_cDNA_l            
+a_cDNA_u   f_cDNA_u            
+a_ATP     
+f_ATP               
+a_Neg     
+f_Neg               
+a_Neg_l   
+f_Neg_l             
+a_Neg_u   
+f_Neg_u             
+e_ATP               
+e_ATP_l             
+e_ATP_u             
+e_neg               
+e_neg_l             
+e_neg_u             
+e_ATP/e_neg         
+e_ATP/e_neg_u       
+e_ATP/e_neg_l       
+ill       
+n_ill     
+from_red            
+deg       
+MGRDHKAKLQQKLLDKGEIEIGGKALRLRSDERPIAERDHNSQGKRGSRQPGHPGRPITILRTEGQSHRDDKGVSRRRNVGKQERGIP                                                                                                
+9727      
+0.0139765587        
+-         
+-                   
+-         
+-                   
+10276     
+0.0183095229        
+5283      
+0.0097807432        
+-         
+-                   
+-         
+-                   
+1.3100165267        
+-                   
+-                   
+0.6997962418        
+-                   
+-                   
+1.8719970878        
+-                   
+-                   
+-         
+-         
+from_16AA 
