@@ -4,6 +4,7 @@
 from time import time
 import sys
 import os
+import my_sequences
 
 from bootstrap import bootstrap
 
@@ -189,7 +190,12 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         return f"{result[0]:.8f} ± {result[1]:.6f}"
 
     # Write data to file
-    print(str(seq).ljust(max_len), end=' ', file=out)
+    if seq in my_sequences.seq_nicknames:
+        print(str(my_sequences.seq_nicknames[seq]).ljust(max_len), end=' ', file=out)
+        print("Found \"" + my_sequences.seq_nicknames[seq] + "\" " + format_bootstrap_result(bootstrap(c_post, totals[2])) + " times with " + format_bootstrap_result(bootstrap(f_post, 1)) + " frequency.")
+    else:
+        print(str(seq).ljust(max_len), end=' ', file=out)
+
     print(format_bootstrap_result(bootstrap(c_fus, totals[0])).ljust(15), end='    ', file=out)
     print(format_bootstrap_result(bootstrap(f_fus, 1)).ljust(15), end='    ', file=out)
     print(format_bootstrap_result(bootstrap(c_post, totals[2])).ljust(15), end='    ', file=out)
@@ -207,7 +213,7 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
     else:
         print('-'.ljust(15), file=out)
 
+out.close()
 print("Time elapsed: " + str(time() - start) + ' s')
 
-out.close()
 
