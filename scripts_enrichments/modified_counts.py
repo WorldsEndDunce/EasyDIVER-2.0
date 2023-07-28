@@ -5,6 +5,9 @@ from time import time
 import sys
 import os
 
+from bootstrap import bootstrap
+
+
 # data_dir = "data"
 # os.chdir(data_dir)
 
@@ -100,7 +103,7 @@ files = [in_file, neg_file, out_file]
 files_exist = [file is not None and os.path.exists(file) for file in files]
 
 all_dict = []
-totals = []
+totals = [] # in, neg, and then out total
 uniques = []
 max_len = 0
 for i, in_file in enumerate(files):
@@ -131,25 +134,25 @@ for i, in_file in enumerate(files):
         all_dict.append(seqfit_dict)
 
 print("Max length sequence:", max_len)
-out = open(res_file,'w')
 
+out = open(res_file,'w')
 print(str('number of unique sequences = ') + str(uniques[-1]), file=out) # Changed to -1
 print(str('total number of molecules = ') + str(totals[-1]), end='\n', file=out)
-print(str('seq').ljust(max_len), end='', file=out)
-print(str('a_in').ljust(10), end=' ', file=out)
-print(str('f_in').ljust(15), end=' ', file=out)
-print(str(str('a_')+str(out_file.split("_")[0]).split("-")[-1]).ljust(10), end=' ', file=out)
-print(str(str('f_')+str(out_file.split("_")[0]).split("-")[-1]).ljust(15), end=' ', file=out)
+print(str('seq').ljust(max_len), end='  ', file=out)
+print(str('a_in').ljust(10), end='      ', file=out)
+print(str('f_in').ljust(15), end='          ', file=out)
+print(str(str('a_out')).ljust(10), end='          ', file=out)
+print(str(str('f_out')).ljust(15), end='            ', file=out)
 if neg_file is not None:
-    print(str(str('a_')+str(neg_file.split("_")[0]).split("-")[-1]).ljust(10), end=' ', file=out)
-    print(str(str('f_')+str(neg_file.split("_")[0]).split("-")[-1]).ljust(15), end=' ', file=out)
+    print(str(str('a_neg')).ljust(10), end='        ', file=out)
+    print(str(str('f_neg')).ljust(15), end='            ', file=out)
 
-print(str(str('e_')+str(out_file.split("_")[0]).split("-")[-1]).ljust(15), end=' ', file=out)
+print(str(str('e_out')).ljust(15), end=' ', file=out)
 if neg_file is not None:
     print(str(str('e_n')).ljust(15), end=' ', file=out)
-    print(str(str(str('e_')+str(out_file.split("_")[0]).split("-")[-1]) + ("/") + str(str('e_n'))).ljust(15), end=' ', file=out)
+    print(str(str(str('e_out')) + ("/") + str(str('e_n'))).ljust(15), end=' ', file=out)
 
-for seq in all_dict[-1]: # Originally 2
+for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a_out, etc. stats
     f_post = all_dict[-1][seq][1]
     c_post = all_dict[-1][seq][0]
 
@@ -178,25 +181,31 @@ for seq in all_dict[-1]: # Originally 2
     else:
         enr_post = 0
         enr_neg = 0
-    # Write data to file
 
-    print(str(str(seq).ljust(max_len)), end=' ', file=out)
-    print(str(str(c_fus).ljust(10)), end=' ', file=out)
-    print(str(str('%.10f' % float(f_fus)).ljust(15)), end='	', file=out)
-    print(str(str(c_post).ljust(10)), end=' ', file=out)
-    print(str(str('%.10f' % float(f_post)).ljust(15)), end=' ', file=out)
+    # Define a function to format the bootstrap result as a string with a fixed width of 15 characters
+    def format_bootstrap_result(result):
+        if isinstance(result[0], int):
+            return f"{result[0]} ± {result[1]:.3f}"
+        return f"{result[0]:.8f} ± {result[1]:.6f}"
+
+    # Write data to file
+    print(str(seq).ljust(max_len), end=' ', file=out)
+    print(format_bootstrap_result(bootstrap(c_fus, totals[0])).ljust(15), end='    ', file=out)
+    print(format_bootstrap_result(bootstrap(f_fus, 1)).ljust(15), end='    ', file=out)
+    print(format_bootstrap_result(bootstrap(c_post, totals[2])).ljust(15), end='    ', file=out)
+    print(format_bootstrap_result(bootstrap(f_post, 1)).ljust(15), end='    ', file=out)
     if neg_file is not None:
-        print(str(str(c_neg).ljust(10)), end=' ', file=out)
-        print(str(str('%.10f' % float(f_neg)).ljust(15)), end=' ', file=out)
-    print(str(str('%.10f' % float(enr_post)).ljust(15)), end=' ', file=out)
+        print(str(format_bootstrap_result(bootstrap(c_neg, totals[1]))).ljust(15), end='    ', file=out)
+        print(format_bootstrap_result(bootstrap(f_neg, 1)).ljust(15), end='    ', file=out)
+    print(str(enr_post).ljust(15), end='    ', file=out)
     if neg_file is not None:
-        print(str(str('%.10f' % float(enr_neg)).ljust(15)), end=' ', file=out)
-    if float(enr_neg) > 0:
-        print(str(str('%.10f' % float(enr_post / enr_neg)).ljust(15)), file=out)
+        print(str(enr_neg).ljust(15), end='    ', file=out)
+    if enr_neg > 0:
+        print(str(enr_post / enr_neg).ljust(15), file=out)
     elif neg_file is None:
-        print(' ', file=out)
+        print(' '.ljust(15), file=out)
     else:
-        print(str(str("-").ljust(15)), file=out)
+        print('-'.ljust(15), file=out)
 
 print("Time elapsed: " + str(time() - start) + ' s')
 
