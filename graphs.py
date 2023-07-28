@@ -1,12 +1,56 @@
 import os
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-sns.set(style="darkgrid")
+def remove_outliers(x_values, y_values, zscore_threshold=3):
+    # Calculate Z-scores for x and y
+    x_zscores = np.abs((x_values - np.mean(x_values)) / np.std(x_values))
+    y_zscores = np.abs((y_values - np.mean(y_values)) / np.std(y_values))
 
-# TODO: total aa, unique aa, unique bio aa over time
+    # Create a mask to filter outlier points
+    outlier_mask = (x_zscores <= zscore_threshold) & (y_zscores <= zscore_threshold)
+
+    # Apply the mask to keep only non-outlier points
+    x_values_filtered = np.array(x_values)[outlier_mask]
+    y_values_filtered = np.array(y_values)[outlier_mask]
+
+    return x_values_filtered, y_values_filtered
+
+sns.set(style="darkgrid")
+file_path = "scripts_enrichments/res.txt"
+
+e_out_values = []
+e_neg_values = []
+
+with open(file_path, 'r') as file:
+    lines = file.readlines()
+    start = 4 # Hard-coded
+    for line in lines[start:]:
+        # Split the line by whitespace to get individual columns
+        columns = line.split()
+        # Extract the 8th and 9th columns and convert them to float
+        e_out = float(columns[-3])
+        e_neg = float(columns[-2])
+        # Append the values to their respective lists
+        e_out_values.append(e_out)
+        e_neg_values.append(e_neg)
+
+# Plotting the scatter plot
+x_filtered, y_filtered = remove_outliers(e_neg_values, e_out_values)
+plt.scatter(x_filtered, y_filtered, s=10)
+plt.plot(x_filtered, x_filtered, color='blue', linestyle='dotted', linewidth=1)
+
+# Adding labels and title
+plt.xlabel('e_neg')
+plt.ylabel('e_out')
+plt.title('e_neg vs e_out Scatter Plot')
+
+# Show the plot
+plt.show()
+
 # Read the histogram data from the text file
-folder_path = "large_output"  # TODO: Automate filename?
+folder_path = "output_large"  # TODO: Automate filename?
 histos = os.path.join(folder_path, "histos")
 files = [file for file in os.listdir(histos) if file.endswith(".txt")]
 

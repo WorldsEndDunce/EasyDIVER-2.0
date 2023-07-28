@@ -151,7 +151,7 @@ if neg_file is not None:
 print(str(str('e_out')).ljust(15), end=' ', file=out)
 if neg_file is not None:
     print(str(str('e_n')).ljust(15), end=' ', file=out)
-    print(str(str(str('e_out')) + ("/") + str(str('e_n'))).ljust(15), end=' ', file=out)
+    print(str(str(str('e_out')) + ("/") + str(str('e_n'))).ljust(15), end='\n', file=out)
 
 for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a_out, etc. stats
     f_post = all_dict[-1][seq][1]
