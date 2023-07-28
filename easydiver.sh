@@ -19,7 +19,6 @@ EOF
 # Set home directory
 hdir=$(dirname "$0")
 
-# TODO: Enrichment calculation? Where to begin?
 =======
 
 
