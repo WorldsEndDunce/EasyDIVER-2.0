@@ -19,14 +19,12 @@ EOF
 # Set home directory
 hdir=$(dirname "$0")
 
-=======
 
-
-usage="USAGE: bash easydiver.sh -i [-n -o -p -q -r -T -h -a -e]
+usage="USAGE: bash easydiver.sh -i [-n -o -p -q -r -T -h -a -e -s]
 where:
 	REQUIRED
 	-i input directory filepath
-        
+
 	OPTIONAL
 	-o output directory filepath
 	-p forward primer sequence for extraction
@@ -35,6 +33,8 @@ where:
 	-r retain individual lane outputs
 	-T # of threads
 	-e extra flags for PANDASeq (use quotes, e.g. \"-L 50\")
+	-s include enrichment stats on output (Only if you have in/neg/out files)
+
 	-h prints this friendly help message"
 
 
@@ -55,7 +55,7 @@ fi
 hdir=$(pwd)
 
 # Parse arguments and set global variables
-while getopts hi:n:o:p:q:T:e:ra option
+while getopts hi:n:o:p:q:T:e:r:sa option
 do
 case "${option}"
 in
@@ -73,6 +73,7 @@ q) rev=${OPTARG};;
 T) threads=${OPTARG};;
 e) extra=${OPTARG};;
 r) slanes="TRUE";;
+s) enr="TRUE";;
 a) prot="TRUE";;
 
 esac
@@ -100,7 +101,7 @@ if [ -z $helpm ];
 #    echo "     \ \_______\ \__\ \__\____\_\  \ __/  / /      \ \_______\ \__\ \__/ /     \ \_______\ \__\\ _\        |\________\\__\ \_______\"
 #    echo "      \|_______|\|__|\|__|\_________\\___/ /        \|_______|\|__|\|__|/       \|_______|\|__|\|__|        \|_______\|__|\|_______| "
 #    echo "                         \|_________\|___|/ ${normal}  "
-		
+
 		banner()
 		{
 		  echo "+-------------------------------------------------------------------------------------------------+"
@@ -116,7 +117,7 @@ fi
 # Argument report
 # Check arguments, print, exit if necessary w/ message
 
-if [ -z "$inopt" ] && [ -z "$outopt" ] && [ -z $fwd ] && [ -z $rev] && [ -z $threads ] && [ -z $extra ] && [ -z $prot ] && [ -z $slanes ]; # flag edit line
+if [ -z "$inopt" ] && [ -z "$outopt" ] && [ -z $fwd ] && [ -z $rev] && [ -z $threads ] && [ -z $extra ] && [ -z $prot ] && [ -z $slanes ] && [ -z $enr ]; # flag edit line
 	then
 		echo ""
 		echo "${bold}NO FLAGS PROVIDED. ENTERING PROMPTED INPUT VERSION${normal}"
@@ -172,21 +173,36 @@ if [ -z "$inopt" ] && [ -z "$outopt" ] && [ -z $fwd ] && [ -z $rev] && [ -z $thr
 						unset slanes
 				fi
 		fi
+		echo "${bold}Perform enrichment stat calculations?${normal}"
+		read enr
+		if [[ $enr == "yes" ]];
+			then
+				echo ""
+			else
+				if [[ $enr == "no" ]];
+					then
+						echo ""
+						unset enr
+					else
+						echo ""
+						unset enr
+				fi
+		fi
 		echo ""
 fi
 
 #=========================Error checking to make sure filepaths are provided with flags=================================
 
 #==========================Is this how you parse the neg data?=====================================
-if [ -z "$negopt" ]; then
-		echo "-----No neg control directory supplied. This will be skipped."
-		echo "-----No neg control directory supplied." >> $outdir/log.txt
-else
-    # define input variable with correct path name
-    cd "$negopt"
-    neg_fastqs=$(pwd)
-    echo "-----Neg control directory path: $neg_fastqs"
-fi
+#if [ -z "$negopt" ]; then
+#		echo "-----No neg control directory supplied. This will be skipped."
+#		echo "-----No neg control directory supplied." >> $outdir/log.txt
+#else
+#    # define input variable with correct path name
+#    cd "$negopt"
+#    neg_fastqs=$(pwd)
+#    echo "-----Neg control directory path: $neg_fastqs"
+#fi
 cd $hdir
 
 if [ -z "$inopt" ]; then
@@ -305,16 +321,25 @@ if [ -z $slanes ];
 		echo "-----Individual lane outputs retained." >> $outdir/log.txt
 fi
 
+if [ -z $enr ];
+	then
+		echo "-----No enrichment calculations will be performed."
+		echo "-----No enrichment stats." >> $outdir/log.txt
+	else
+		echo "-----Enrichment calculations will be performed."
+		echo "-----Yes enrichment stats." >> $outdir/log.txt
+fi
+
 echo ""
 
 #============= If the neg control directory exists, it should contain fastqs too
-if [ ! -z $negopt ]; then
-  cd $neg_fastqs
-  if [[ -z "$(ls -1 *.fastq* 2>/dev/null | grep fastq)" ]]; then
-    echo "ERROR: Neg control input directory does not contain fastq files"
-    exit 1
-  fi
-fi
+#if [ ! -z $negopt ]; then
+#  cd $neg_fastqs
+#  if [[ -z "$(ls -1 *.fastq* 2>/dev/null | grep fastq)" ]]; then
+#    echo "ERROR: Neg control input directory does not contain fastq files"
+#    exit 1
+#  fi
+#fi
 
 # Make sure input directory contains fastqs before proceeding
 cd $fastqs
@@ -610,8 +635,9 @@ if [ -z $prot ];
 
     awk '{ print }' $outdir/log_temp1.txt | column -t >> $outdir/log.txt
 
-		#rm $outdir/log_temp1.txt
-		#rm $outdir/log_temp2.txt
+		rm $outdir/log_temp1.txt
+		rm $outdir/log_temp2.txt
+		# rm $outdir/sorted.txt
 
 fi
 
@@ -622,3 +648,16 @@ end=`date +%s`
 runtime=$((end-start))
 echo ""
 echo "Run time:" $runtime "s"
+
+#cd data
+#outdir="pipeline.output"
+
+# Now with enrichment calculations!
+if [ ! -z $enr ];
+  then
+  echo "The current directory is: $PWD"
+  echo "Calling modified_counts_bash.sh..."
+
+  bash ../scripts_enrichments/modified_counts_bash.sh -out $outdir/counts.aa/1-out_counts.aa.txt -neg $outdir/counts.aa/2-neg_counts.aa.txt -res ../scripts_enrichments/simple_res.txt
+  # $outdir/counts.aa/3-5R5-Fus-in_S3_counts.aa.txt $outdir/counts.aa/4-5R5-Neg_S4_counts.aa.txt $outdir/counts.aa/7-5R5-ATPGTP_S7_counts.aa.txt ../scripts_enrichments/res.txt # TODO: Automate names
+fi

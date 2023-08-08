@@ -1,0 +1,15 @@
+-----Input directory path: /mnt/c/Users/allis/PycharmProjects/EasyDIVER-2.0/data_small
+-----Output directory path: /mnt/c/Users/allis/PycharmProjects/EasyDIVER-2.0/data_small/output.20230728_094548
+-----Forward Primer: GGCGGAAAGCACATCTGC
+-----No reverse primer supplied.
+-----Number of threads = 14
+-----No additional PANDAseq flags.
+-----Translation needed.
+-----Individual lane outputs suppressed.
+-----Yes enrichment stats.
+
+sample  fastq_R1  fastq_R2  unique_nt  total_nt  recovered_nt(%)  unique_aa  total_aa  recovered_aa(%)
+1-neg   64516     64516     54168      55576     38695            55556                
+2-neg   53541     53541     45131      46605     31147            46593                
+1-out   64516     64516     54168      55576     38695            55556                
+2-out   53541     53541     45131      46605     31147            46593                

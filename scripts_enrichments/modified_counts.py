@@ -5,6 +5,7 @@ from time import time
 import sys
 import os
 import my_sequences
+import re
 
 from bootstrap import bootstrap
 
@@ -14,23 +15,20 @@ from bootstrap import bootstrap
 
 # Helper function for multi-round cases (1A + 1B)
 def next_round_file(input_str):
-    # Find the index of the hyphen in the string
-    hyphen_index = input_str.find('-')
+    # Find the index of the last slash in the string to isolate the directory path
+    last_slash_index = input_str.rfind('/')
+    directory_path = input_str[:last_slash_index + 1] if last_slash_index != -1 else ''
 
-    if hyphen_index != -1:
-        # Extract the integer part of the string
-        integer_part = input_str[:hyphen_index]
+    # Use regular expression to find the number before "-out.txt" in the filename
+    match = re.search(r'(\d+)-out\.txt$', input_str)
+    if match:
+        number = int(match.group(1))  # Extract the integer part
+        incremented_number = str(number + 1)  # Increment the integer and convert it back to string
+        new_filename = incremented_number + '-out.txt'
 
-        try:
-            number = int(integer_part)  # Parse the integer
-            incremented_number = str(number + 1)  # Increment the integer and convert it back to string
-            return incremented_number + input_str[
-                                        hyphen_index:]  # Concatenate the incremented number with the remaining string
+        return directory_path + input_str[last_slash_index + 1:].replace(match.group(0), new_filename)
 
-        except ValueError:
-            pass
-
-    return input_str  # Return the original string if no hyphen or invalid integer found
+    return input_str  # Return the original string if no match found
 
 if not os.path.exists("modified_counts"):
     os.makedirs("modified_counts")
@@ -86,11 +84,12 @@ if res_file is None:
 # Cases 1A and 1B
 if in_file is None:
     if neg_file is None:
-        print("Now computing enrinchments for Case 1A...")
+        print("Now computing enrichments for Case 1A...")
     else:
-        print("Now computing enrinchments for Case 1B...")
+        print("Now computing enrichments for Case 1B...")
     in_file = out_file # Treat current out file as the input file for the next round
     out_file = next_round_file(in_file) # ex: If the file is named 9-out.txt, the next_round_file is named 10-out.txt
+    print(out_file)
     if not os.path.exists(out_file) or neg_file is not None and not os.path.exists(neg_file):
         print("Hmm... it seems as if there is no out file after this one. Would you like to specify an in file?")
         if not os.path.exists(neg_file):
