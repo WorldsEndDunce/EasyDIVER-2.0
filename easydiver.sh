@@ -659,5 +659,12 @@ if [ ! -z $enr ];
   echo "Calling modified_counts_bash.sh..."
 
   bash ../scripts_enrichments/modified_counts_bash.sh -out $outdir/counts.aa/1-out_counts.aa.txt -neg $outdir/counts.aa/2-neg_counts.aa.txt -res ../scripts_enrichments/simple_res.txt
-  # $outdir/counts.aa/3-5R5-Fus-in_S3_counts.aa.txt $outdir/counts.aa/4-5R5-Neg_S4_counts.aa.txt $outdir/counts.aa/7-5R5-ATPGTP_S7_counts.aa.txt ../scripts_enrichments/res.txt # TODO: Automate names
+  # $outdir/counts.aa/3-5R5-Fus-in_S3_counts.aa.txt $outdir/counts.aa/4-5R5-Neg_S4_counts.aa.txt $outdir/counts.aa/7-5R5-ATPGTP_S7_counts.aa.txt ../scripts_enrichments/res.txt
+  # TODO: Calculate every round
+  # if cases 1A and 1B
+  # for i up to max_out - 1
+  # run bash of modified_counts w/ the args
+  # if cases 2A and 2B
+  # for i up to max_out
+  # run bash of modified_counts w/ args
 fi
