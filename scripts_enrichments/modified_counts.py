@@ -13,6 +13,12 @@ from bootstrap import bootstrap
 # data_dir = "data"
 # os.chdir(data_dir)
 
+# Helper function to format the bootstrap result as a string with a fixed width of 15 characters
+def format_bootstrap(result):
+    if isinstance(result[0], int):
+        return f"{result[0]} ± {result[1]:.3f}"
+    return f"{result[0]:.8f} ± {result[1]:.6f}"
+
 # Helper function for multi-round cases (1A + 1B)
 def next_round_file(input_str):
     # Find the index of the last slash in the string to isolate the directory path
@@ -147,9 +153,9 @@ if neg_file is not None:
     print(str(str('a_neg')).ljust(10), end='        ', file=out)
     print(str(str('f_neg')).ljust(15), end='            ', file=out)
 
-print(str(str('e_out')).ljust(15), end=' ', file=out)
+print(str(str('e_out')).ljust(15), end='                ', file=out)
 if neg_file is not None:
-    print(str(str('e_n')).ljust(15), end=' ', file=out)
+    print(str(str('e_n')).ljust(15), end='              ', file=out)
     print(str(str(str('e_out')) + ("/") + str(str('e_n'))).ljust(15), end='\n', file=out)
 
 for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a_out, etc. stats
@@ -157,12 +163,12 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
     c_post = all_dict[-1][seq][0]
 
     try:
-        f_fus = all_dict[0][seq][1]
-        c_fus = all_dict[0][seq][0]
+        f_in = all_dict[0][seq][1]
+        c_in = all_dict[0][seq][0]
 
     except KeyError:
-        f_fus = 0  # Change this line to modify fraction used if not found
-        c_fus = 0
+        f_in = 0  # Change this line to modify fraction used if not found
+        c_in = 0
     if neg_file is not None:
         try:
             f_neg = all_dict[1][seq][1]
@@ -174,39 +180,55 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         f_neg = 0
         c_neg = 0
 
-    # Calculate and adjust enrichment in positive and negative pools
-    if f_fus != 0:
-        enr_post = f_post / f_fus  # Enrichment due to selection
-        enr_neg = f_neg / f_fus  # Enrichment due to selection
-    else:
-        enr_post = 0
-        enr_neg = 0
-
-    # Define a function to format the bootstrap result as a string with a fixed width of 15 characters
-    def format_bootstrap_result(result):
-        if isinstance(result[0], int):
-            return f"{result[0]} ± {result[1]:.3f}"
-        return f"{result[0]:.8f} ± {result[1]:.6f}"
-
+    # Bootstrap data
+    c_post_boot = bootstrap(c_post, totals[2])
+    f_post_boot = bootstrap(f_post, 1)
+    c_in_boot = bootstrap(c_in, totals[0])
+    f_in_boot = bootstrap(f_in, 1)
+    c_neg_boot = None
+    f_neg_boot = None
     # Write data to file
     if seq in my_sequences.seq_nicknames:
         print(str(my_sequences.seq_nicknames[seq]).ljust(max_len), end=' ', file=out)
-        print("Found \"" + my_sequences.seq_nicknames[seq] + "\" " + format_bootstrap_result(bootstrap(c_post, totals[2])) + " times with " + format_bootstrap_result(bootstrap(f_post, 1)) + " frequency.")
+        print("Found \"" + my_sequences.seq_nicknames[seq] + "\" " + format_bootstrap(c_post_boot) + " times with " + format_bootstrap(f_post_boot) + " frequency.")
     else:
         print(str(seq).ljust(max_len), end=' ', file=out)
 
-    print(format_bootstrap_result(bootstrap(c_fus, totals[0])).ljust(15), end='    ', file=out)
-    print(format_bootstrap_result(bootstrap(f_fus, 1)).ljust(15), end='    ', file=out)
-    print(format_bootstrap_result(bootstrap(c_post, totals[2])).ljust(15), end='    ', file=out)
-    print(format_bootstrap_result(bootstrap(f_post, 1)).ljust(15), end='    ', file=out)
+    print(format_bootstrap(c_in_boot).ljust(15), end='    ', file=out)
+    print(format_bootstrap(f_in_boot).ljust(15), end='    ', file=out)
+    print(format_bootstrap(c_post_boot).ljust(15), end='    ', file=out)
+    print(format_bootstrap(f_post_boot).ljust(15), end='    ', file=out)
+
     if neg_file is not None:
-        print(str(format_bootstrap_result(bootstrap(c_neg, totals[1]))).ljust(15), end='    ', file=out)
-        print(format_bootstrap_result(bootstrap(f_neg, 1)).ljust(15), end='    ', file=out)
-    print(str(enr_post).ljust(15), end='    ', file=out)
+        c_neg_boot = bootstrap(c_neg, totals[1])
+        f_neg_boot = bootstrap(f_neg, 1)
+        print(str(format_bootstrap(c_neg_boot)).ljust(15), end='    ', file=out)
+        print(format_bootstrap(f_neg_boot).ljust(15), end='    ', file=out)
+
+    # Calculate and adjust enrichment in positive and negative pools
+    if f_in_boot[0] - f_in_boot[1] > 0:
+        enr_post_min = max(0, (f_post_boot[0] - f_post_boot[1])) / (f_in_boot[0] + f_in_boot[1])  # Min enrichment due to selection - assumes smallest f_out and largest f_in
+        enr_post_max = max(0, (f_post_boot[0] + f_post_boot[1])) / (f_in_boot[0] - f_in_boot[1])
+        enr_neg_min = max(0, (f_neg_boot[0] - f_neg_boot[1])) / (f_in_boot[0] + f_in_boot[1])
+        enr_neg_max = max(0, (f_neg_boot[0] + f_neg_boot[1])) / (f_in_boot[0] - f_in_boot[1])
+    else: # Not enough data to make an estimate
+        enr_post_min = 0
+        enr_post_max = 0
+        enr_neg_min = 0
+        enr_neg_max = 0
+    if enr_post_max > 0:
+        print(str(f"[{enr_post_min:.8f}, {enr_post_max:.8f}]").ljust(15), end='     ', file=out)
+    else:
+        print('-'.ljust(15), end='     ', file=out)
+
     if neg_file is not None:
-        print(str(enr_neg).ljust(15), end='    ', file=out)
-    if enr_neg > 0:
-        print(str(enr_post / enr_neg).ljust(15), file=out)
+        if enr_neg_max > 0:
+            print(str(f"[{enr_neg_min:.8f}, {enr_neg_max:.8f}]").ljust(15), end='       ', file=out)
+        else:
+            print('-'.ljust(15), end='     ', file=out)
+
+    if enr_neg_max > 0 and enr_neg_min > 0:
+        print(str(f"[{enr_post_min / enr_neg_max:.8f}, {enr_post_max / enr_neg_min:.8f}]").ljust(15), file=out)
     elif neg_file is None:
         print(' '.ljust(15), file=out)
     else:
