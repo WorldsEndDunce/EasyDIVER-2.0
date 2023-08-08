@@ -1,0 +1,9 @@
+-----Input directory path: /mnt/c/Users/allis/PycharmProjects/EasyDIVER-2.0/data_small
+-----Output directory path: /mnt/c/Users/allis/PycharmProjects/EasyDIVER-2.0/data_small/output.20230808_143837
+-----Forward Primer: GGCGGAAAGCACATCTGC
+-----No reverse primer supplied.
+-----Number of threads = 14
+-----No additional PANDAseq flags.
+-----Translation needed.
+-----Individual lane outputs suppressed.
+-----Yes enrichment stats.

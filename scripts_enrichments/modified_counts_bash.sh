@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python ./scripts_enrichments/modified_counts.py $1 $2 $3 $4 $5 $6 $7 $8 # .. when running easydiver
+python ../scripts_enrichments/modified_counts.py $1 $2 $3 $4 $5 $6 $7 $8 # .. when running easydiver
 
 #head -n3 $4 > final.txt
 #(tail -n+5 $4 | sort -k4 -n -r )  >> final.txt
