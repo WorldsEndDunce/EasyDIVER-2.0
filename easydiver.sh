@@ -650,7 +650,7 @@ echo ""
 echo "Run time:" $runtime "s"
 
 #cd data
-outdir="output_small"
+outdir="output_small" # Debugging purposes
 
 # Now with enrichment calculations!
 if [ ! -z $enr ];
