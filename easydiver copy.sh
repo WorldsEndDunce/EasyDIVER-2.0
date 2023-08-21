@@ -387,7 +387,7 @@ fi
 #
 #    # Join reads & extract insert
 #    echo "Joining $lbase reads & extracting primer..."
-#    pandaseq -f $R1 -r $R2 -F \ TODO: Look at this line - PandaSeq dependencies
+#    pandaseq -f $R1 -r $R2 -F \
 #    $pval $qval \
 #    -w $fqdir/$lbase.joined.fastq $tval -T $threads $extra $lval $dval 2>/dev/null
 #
@@ -671,26 +671,19 @@ if [ ! -z $enr ];
       fi
   done
 
+  # TODO: if cases 1A and 1B, go up to max_out - 1 , otherwise just max_out
   # Check if there are any files matching the format "*-in_counts.aa.txt"
   if [ ! -n "$(find "$counts_dir" -name '*-in_counts.aa.txt' -print -quit)" ]; then
       # Cases 1A and 1B: Loop up to max_round - 1
       for ((i = 1; i < max_round; i++)); do
           # Run the modified_counts_bash.sh script with the appropriate arguments
-          if [ ! -n "$(find "$counts_dir" -name '*-neg_counts.aa.txt' -print -quit)" ]; then
-            bash ../scripts_enrichments/modified_counts_bash.sh -out "$counts_dir/$i-out_counts.aa.txt" -res "../scripts_enrichments/$i-simple_res.txt"
-          else
-            bash ../scripts_enrichments/modified_counts_bash.sh -out "$counts_dir/$i-out_counts.aa.txt" -neg "$counts_dir/$(($i + 1))-neg_counts.aa.txt" -res "../scripts_enrichments/$i-simple_res.txt"
-          fi
+          bash ../scripts_enrichments/modified_counts_bash.sh -out "$counts_dir/$i-out_counts.aa.txt" -neg "$counts_dir/$(($i + 1))-neg_counts.aa.txt" -res "../scripts_enrichments/$i-simple_res.txt"
       done
   else
       # Case 2A and 2B: Loop up to max_round
       for ((i = 1; i <= max_round; i++)); do
           # Run the modified_counts_bash.sh script with the appropriate arguments
-          if [ ! -n "$(find "$counts_dir" -name '*-neg_counts.aa.txt' -print -quit)" ]; then
-            bash ../scripts_enrichments/modified_counts_bash.sh -in "$counts_dir/$i-in_counts.aa.txt" -out "$counts_dir/$i-out_counts.aa.txt" -res "../scripts_enrichments/$i-simple_res.txt"
-          else
-            bash ../scripts_enrichments/modified_counts_bash.sh -in "$counts_dir/$i-in_counts.aa.txt" -out "$counts_dir/$i-out_counts.aa.txt" -neg "$counts_dir/$i-neg_counts.aa.txt" -res "../scripts_enrichments/$i-simple_res.txt"
-          fi
+          bash ../scripts_enrichments/modified_counts_bash.sh -in "$counts_dir/$i-in_counts.aa.txt" -out "$counts_dir/$i-out_counts.aa.txt" -neg "$counts_dir/$i-neg_counts.aa.txt" -res "../scripts_enrichments/$i-simple_res.txt"
       done
   fi
 fi

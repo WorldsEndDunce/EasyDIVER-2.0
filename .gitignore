@@ -2,5 +2,7 @@ data_(old)/
 data_large/
 data/
 scripts_enrichments/res.txt
+scripts_enrichments/1-res.txt
+scripts_enrichments/2-res.txt
 scripts_enrichments/simple_res.txt
 scripts_enrichments/bootstrapped_res.txt
