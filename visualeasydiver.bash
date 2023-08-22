@@ -1,5 +1,20 @@
 #! /bin/bash
 
+export NEWT_COLORS='
+root=,blue
+checkbox=,brightblue
+entry=,brightblue
+title=brightgreen,gray
+textbox=,lightgray
+window=,gray
+sellistbox=,green
+actsellistbox=,green
+button=,green
+actbutton=,green
+actcheckbox=,green
+border=,gray
+'
+
 clear
 
 function useEasyDiver {
@@ -15,7 +30,7 @@ function useEasyDiver {
         "Extra Flags for PANDASeq" "" OFF \
         3>&1 1>&2 2>&3)
 #    echo "options: $options"
-    if [ $? -eq 0 ]; then
+    if [ ! -z "$options" ]; then
         selected_options="Selected options:\n$options"
         whiptail --title "Options Selected" --msgbox "$selected_options" 20 60
 
@@ -27,7 +42,7 @@ function useEasyDiver {
 
         if [[ $options == *"Output Directory"* ]]; then
             output_dir=$(whiptail --inputbox "Enter output directory filepath:" 10 60 3>&1 1>&2 2>&3)
-            command+=" -n \"$output_dir\""
+            command+=" -o \"$output_dir\""
         fi
 
         if [[ $options == *"Forward Primer Sequence"* ]]; then
@@ -58,7 +73,7 @@ function useEasyDiver {
             command+=" -e \"$extra_flags\""
         fi
         # Run the constructed command
-        eval "$command" | whiptail --gauge "Running the command..." 6 60 0
+        eval "$command" | whiptail --gauge "Running EasyDIVER..." 6 60 0
     else
         whiptail --title "Options Selected" --msgbox "No options selected" 10 40
     fi
@@ -128,6 +143,46 @@ function findEnrichments {
     }
 }
 
+function graphFigures {
+  {
+    choice=$(whiptail --title "Graphs" --radiolist \
+    "Choose an option:" $LINES $COLUMNS $(( $LINES - 8 )) \
+    "Histogram" "Visualize sequence length distribution for a given output/histos folder" ON \
+    "Enrichment Scatterplot" "Plot negative control vs output enrichment of each sequence for a given round." OFF \
+    "AA Count Line Graph" "Plot unique and total amino acid counts across all rounds" OFF \
+    "Txt to Excel" "Convert a given enrichment result output (.txt), convert it to .xslx" OFF \
+    3>&1 1>&2 2>&3)
+    filepath=""
+    graph=""
+    if [ $? -eq 0 ]; then
+        if [ "$choice" == "Histogram" ]; then
+            filepath=$(whiptail --inputbox "Enter EasyDIVER output directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            graph="2"
+            python3 ./graphs.py "$filepath" "$graph" | whiptail --gauge "Graphing..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        elif [ "$choice" == "Enrichment Scatterplot" ]; then
+            filepath=$(whiptail --inputbox "Enter Enrichment result .txt filepath:" 10 60 3>&1 1>&2 2>&3)
+            graph="1"
+            python3 ./graphs.py "$filepath" "$graph" | whiptail --gauge "Graphing..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        elif [ "$choice" == "AA Count Line Graph" ]; then
+            filepath=$(whiptail --inputbox "Enter EasyDIVER output directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            graph="3"
+            python3 ./graphs.py "$filepath" "$graph" | whiptail --gauge "Graphing..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        elif [ "$choice" == "Txt to Excel" ]; then
+            filepath=$(whiptail --inputbox "Enter Enrichment result .txt filepath:" 10 60 3>&1 1>&2 2>&3)
+#            lines=$(whiptail --inputbox "Enter number of xslx lines (4 - 1,000,000):" 10 60 3>&1 1>&2 2>&3)
+            python3 ./txt_to_xslx.py "$filepath" | whiptail --gauge "Working on it..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        fi
+    else
+        echo "Operation canceled."
+    fi
+
+    }
+}
+
 ascii_art=(
 $'
   ______                _____ _______      ________ _____    ___    ___
@@ -150,7 +205,7 @@ CHOICE=$(
 whiptail --title "Main Menu" --menu "Choose an option:"  $LINES $COLUMNS $(( $LINES - 8 )) \
 	"1)" "Use EasyDIVER"   \
 	"2)" "Calculate enrichment statistics"  \
-	"3)" "Graph figures (TODO)" \
+	"3)" "Figures and Misc." \
 	"4)" "Help"  \
 	"5)" "End script"  3>&2 2>&1 1>&3
 )
@@ -164,11 +219,12 @@ case $CHOICE in
 	  findEnrichments
 	;;
 	"3)")
-	whiptail --msgbox "$result" 20 78
+	  graphFigures
   ;;
 	"4)")
 		result="EasyDIVER 2.0 is a Bash program that takes input files of selex round reads in fastq(.gz) format and analyzes them, providing
-sequence type and length distribution, joined reads, and/or enrichment information.
+sequence type and length distribution, joined reads, and/or enrichment information. There are also options to visualize sequence distribution,
+enrichment, and diversity data.
 v2.0 Author: Allison Tee and Celia Blanco
 contact: ateecup@stanford.edu or cblanco@chem.ucsb.edu
 
