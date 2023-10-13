@@ -1,6 +1,6 @@
 # Dependencies Addendum
-I was struggling to install the required dependencies. But for Windows (Ubuntu), I have found that the following steps work:
-1. Visit the Microconda page (https://docs.conda.io/en/latest/miniconda.html#linux-installers), and copy the link that matches your system.
+For Windows (Ubuntu), I have found that the following steps work to install SimpleSAILR dependencies:
+1. Visit the Microconda page (https://docs.conda.io/en/latest/miniconda.html#linux-installers), and copy the link to the download that matches your system.
 2. `wget <PASTE_LINK_ADDRESS>`
 3. `bash <MINICONDA_INSTALLER>`
 4. `conda activate` <br>

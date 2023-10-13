@@ -1,8 +1,24 @@
+"""
+graphs.py plots a histogram for sequence length, a scatterplot comparing enrichment values, and a line chart showing
+total and unique AA counts over time.
+"""
 import os
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+"""
+   This function removes outliers from the given x and y values based on the provided z-score threshold.
+    Used to graph scatterplot.
+   Parameters:
+   x_values (list): A list of x-values from which outliers are to be removed.
+   y_values (list): A list of y-values from which outliers are to be removed.
+   zscore_threshold (int): The z-score threshold to identify an outlier. Default is 3.
+
+   Returns:
+   x_values_filtered (numpy array): The filtered x-values after removing outliers.
+   y_values_filtered (numpy array): The filtered y-values after removing outliers.
+"""
 def remove_outliers(x_values, y_values, zscore_threshold=3):
     # Calculate Z-scores for x and y
     x_zscores = np.abs((x_values - np.mean(x_values)) / np.std(x_values))
@@ -17,12 +33,16 @@ def remove_outliers(x_values, y_values, zscore_threshold=3):
 
     return x_values_filtered, y_values_filtered
 
+# Set seaborn style
 sns.set(style="darkgrid")
+# Define file path
 file_path = "scripts_enrichments/res.txt"
 
+# Initialize empty lists for e_out and e_neg values for scatterplot
 e_out_values = []
 e_neg_values = []
 
+# Open EasyDIVER results file and read lines
 with open(file_path, 'r') as file:
     lines = file.readlines()
     start = 4 # Hard-coded
@@ -93,31 +113,39 @@ for file in files:
 
 file_path = folder_path + "/log.txt"
 
-# Lists to store the data
+# Lists to store the data for line graph
 sample_names = []
 unique_aa = {}
 total_aa = {}
 max_round = -1
+
 # Read the text file and extract the data
 with open(file_path, 'r') as file:
     lines = file.readlines()
-    start = False
+    start = False # Initialize a flag to identify the start of relevant data
     for line in lines:
         if line.startswith("sample"):
             start = True
             continue
         elif start:
-            line_data = line.split()
-            sample_names.append(line_data[0])
+            line_data = line.split() # Split the line into individual data points
+            sample_names.append(line_data[0]) # Store the first data point (sample name)
             max_round = max(max_round, int(line_data[0].split("-")[0]))
+            # Append unique amino acid (AA) counts to a dictionary, using the AA type as the key
+            # The second-to-last data point ([-2]) is the count of unique AAs
             unique_aa.setdefault(line_data[0].split("-")[1], []).append(int(line_data[-2])) # TODO: Don't hardcode?
+            # Append total AA counts to a dictionary, using the AA type as the key
+            # The last data point ([-1]) is the count of total AAs
             total_aa.setdefault(line_data[0].split("-")[1], []).append(int(line_data[-1]))
+
 
 print("Unique amino acid (AA) counts throughout rounds: " + str(unique_aa))
 print("Total amino acid (AA) counts throughout rounds: " + str(total_aa))
-# Plot the data
+
+# Create a figure for plotting
 plt.figure(figsize=(10, 6))
 
+# Iterate through different AA types
 for key in unique_aa.keys():
     color = "orange"
     if key == "neg":
@@ -126,14 +154,21 @@ for key in unique_aa.keys():
         color = "red"
     label_u = "Unique AA " + key
     label_t = "Total AA " + key
+    # Plot the unique AA counts and label with the AA type
     plt.plot(unique_aa[key], marker="o", label=label_u, color=color)
+    # Plot the total AA counts and label with the AA type
     plt.plot(total_aa[key], marker="o", label=label_t, color="dark" + color)
 
+# Add labels and title to the plot
 plt.xlabel('Round')
 plt.ylabel('Count')
 plt.title('Unique and Total Amino Acid Counts Throughout Experiment')
+
+# Add a legend to distinguish unique and total counts for each AA type
 plt.legend()
+# Customize x-axis labels to show round numbers
 plt.xticks(range(0, max_round), [f'#{i}' for i in range(1, max_round + 1)], rotation=45)
+# Adjust layout for better appearance
 plt.tight_layout()
-# plt.show()
+# Save the plot as an image with high resolution (DPI: 500)
 plt.savefig("figures/aa.png", dpi=500)
