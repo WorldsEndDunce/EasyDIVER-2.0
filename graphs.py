@@ -1,10 +1,9 @@
+#!/usr/bin/env python3
+
 """
 graphs.py plots a histogram for sequence length, a scatterplot comparing enrichment values, and a line chart showing
 total and unique AA counts over time.
 """
-
-#!/usr/bin/env python3
-
 import os
 import numpy as np
 import seaborn as sns
