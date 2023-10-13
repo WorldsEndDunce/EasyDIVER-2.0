@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # This is EasyDIVER, a pipeline for Easy pre-processing and Dereplication of In Vitro Evolution Reads

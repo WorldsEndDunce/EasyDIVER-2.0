@@ -145,7 +145,8 @@ function findEnrichments {
               echo $progress
           done
       fi
-  }| whiptail --gauge "Finding enrichments..." 6 60 0
+    }| whiptail --gauge "Finding enrichments..." 6 60 0
+  }
 }
 
 # Function to graph figures
