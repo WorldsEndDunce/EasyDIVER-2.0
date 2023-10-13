@@ -45,7 +45,38 @@ function useEasyDiver {
             input_dir=$(whiptail --inputbox "Enter input directory filepath:" 10 60 3>&1 1>&2 2>&3)
             command+=" -i \"$input_dir\""
         fi
-        # ... Other options ...
+          if [[ $options == *"Output Directory"* ]]; then
+            output_dir=$(whiptail --inputbox "Enter output directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -o \"$output_dir\""
+        fi
+
+        if [[ $options == *"Forward Primer Sequence"* ]]; then
+            forward_primer=$(whiptail --inputbox "Enter forward primer sequence:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -p \"$forward_primer\""
+        fi
+
+        if [[ $options == *"Reverse Primer Sequence"* ]]; then
+            reverse_primer=$(whiptail --inputbox "Enter reverse primer sequence:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -q \"$reverse_primer\""
+        fi
+
+        if [[ $options == *"Retain Individual Lane Outputs"* ]]; then
+            command+=" -r"
+        fi
+
+        if [[ $options == *"Number of Threads"* ]]; then
+            num_threads=$(whiptail --inputbox "Enter number of threads:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -T \"$num_threads\""
+        fi
+
+        if [[ $options == *"Translate to Amino Acids"* ]]; then
+            command+=" -a"
+        fi
+
+        if [[ $options == *"Extra Flags for PANDASeq"* ]]; then
+            extra_flags=$(whiptail --inputbox "Enter extra flags for PANDASeq:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -e \"$extra_flags\""
+        fi
 
         # Run the constructed command and display a progress gauge
         eval "$command" | whiptail --gauge "Running EasyDIVER..." 6 60 0
@@ -67,9 +98,53 @@ function findEnrichments {
 
     # Get the EasyDIVER output directory path
     dir=$(whiptail --inputbox "Enter the filepath for the EasyDIVER output directory:" 10 60 3>&1 1>&2 2>&3)
+    {
+      echo type
+      outdir=$dir
+      counts_dir="$outdir/$type" # $outdir/counts or $outdir/counts.aa
 
-    # ... Rest of the code to calculate enrichments ...
+      # Get the maximum round
+      max_round=0
+      for file in "$counts_dir"/*-out_$type.txt; do
+          filename=$(basename "$file")
+          round=${filename%-out_$type.txt}
 
+          if [ $round -gt $max_round ]; then
+              max_round=$round
+          fi
+      done
+          progress=$((5))
+          echo $progress
+      # Check if there are any files matching the format "*-in_counts.aa.txt"
+      if [ ! -n "$(find "$counts_dir" -name "*-in_${type}.txt" -print -quit)" ]; then
+          # Cases 1A and 1B: Loop up to max_round - 1
+          for ((i = 1; i < max_round; i++)); do
+              # Run the modified_counts_bash.sh script with the appropriate arguments
+              if [ ! -n "$(find "$counts_dir" -name "*-neg_${type}.txt" -print -quit)" ]; then
+                python3 ./scripts_enrichments/modified_counts.py -out "$counts_dir/$i-out_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              else
+                python3 ./scripts_enrichments/modified_counts.py -out "$counts_dir/$i-out_$type.txt" -neg "$counts_dir/$(($i + 1))-neg_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              fi
+
+              # Calculate progress
+              progress=$((i * 100 / (max_round - 1)))
+              echo $progress
+          done
+      else
+          # Case 2A and 2B: Loop up to max_round
+          for ((i = 1; i <= max_round; i++)); do
+              # Run the modified_counts_bash.sh script with the appropriate arguments
+              if [ ! -n "$(find "$counts_dir" -name "*-neg_${type}.txt" -print -quit)" ]; then
+                python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in_$type.txt" -out "$counts_dir/$i-out_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              else
+                python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in_$type.txt" -out "$counts_dir/$i-out_$type.txt" -neg "$counts_dir/$i-neg_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              fi
+
+              # Calculate progress
+              progress=$((i * 100 / max_round))
+              echo $progress
+          done
+      fi
   }| whiptail --gauge "Finding enrichments..." 6 60 0
 }
 
