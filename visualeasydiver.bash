@@ -1,66 +1,186 @@
 #! /bin/bash
 
-# This program is just an example of how to make a whiptail menu and some basic commands.
-# Copyright (C) 2016  Baljit Singh Sarai
-
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+export NEWT_COLORS='
+root=,blue
+checkbox=,brightblue
+entry=,brightblue
+title=brightgreen,gray
+textbox=,lightgray
+window=,gray
+sellistbox=,green
+actsellistbox=,green
+button=,green
+actbutton=,green
+actcheckbox=,green
+border=,gray
+'
 
 clear
 
+function useEasyDiver {
+  {
+    options=$(whiptail --title "Select EasyDIVER Options" --checklist "Choose EasyDIVER options by hitting the space key. Press enter to confirm:" 20 60 10 \
+        "Input Directory" "" ON \
+        "Output Directory" "" OFF \
+        "Forward Primer Sequence" "" OFF \
+        "Reverse Primer Sequence" "" OFF \
+        "Retain Individual Lane Outputs" "" OFF \
+        "Number of Threads" "" OFF \
+        "Translate to Amino Acids" "" OFF \
+        "Extra Flags for PANDASeq" "" OFF \
+        3>&1 1>&2 2>&3)
+#    echo "options: $options"
+    if [ ! -z "$options" ]; then
+        selected_options="Selected options:\n$options"
+        whiptail --title "Options Selected" --msgbox "$selected_options" 20 60
 
-function contextSwitch {
-	{
-	ctxt1=$(grep ctxt /proc/stat | awk '{print $2}')
-        echo 50
-	sleep 1
-        ctxt2=$(grep ctxt /proc/stat | awk '{print $2}')
-        ctxt=$(($ctxt2 - $ctxt1))
-        result="Number os context switches in the last secound: $ctxt"
-	echo $result > result
-	} | whiptail --gauge "Getting data ..." 6 60 0
+        command="bash easydiver.sh"
+        if [[ $options == *"Input Directory"* ]]; then
+            input_dir=$(whiptail --inputbox "Enter input directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -i \"$input_dir\""
+        fi
+
+        if [[ $options == *"Output Directory"* ]]; then
+            output_dir=$(whiptail --inputbox "Enter output directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -o \"$output_dir\""
+        fi
+
+        if [[ $options == *"Forward Primer Sequence"* ]]; then
+            forward_primer=$(whiptail --inputbox "Enter forward primer sequence:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -p \"$forward_primer\""
+        fi
+
+        if [[ $options == *"Reverse Primer Sequence"* ]]; then
+            reverse_primer=$(whiptail --inputbox "Enter reverse primer sequence:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -q \"$reverse_primer\""
+        fi
+
+        if [[ $options == *"Retain Individual Lane Outputs"* ]]; then
+            command+=" -r"
+        fi
+
+        if [[ $options == *"Number of Threads"* ]]; then
+            num_threads=$(whiptail --inputbox "Enter number of threads:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -T \"$num_threads\""
+        fi
+
+        if [[ $options == *"Translate to Amino Acids"* ]]; then
+            command+=" -a"
+        fi
+
+        if [[ $options == *"Extra Flags for PANDASeq"* ]]; then
+            extra_flags=$(whiptail --inputbox "Enter extra flags for PANDASeq:" 10 60 3>&1 1>&2 2>&3)
+            command+=" -e \"$extra_flags\""
+        fi
+        # Run the constructed command
+        eval "$command" | whiptail --gauge "Running EasyDIVER..." 6 60 0
+    else
+        whiptail --title "Options Selected" --msgbox "No options selected" 10 40
+    fi
+    }
 }
 
+function findEnrichments {
+  {
+    type=""
+    if (whiptail --title "Find Enrichments" --yesno "Calculate enrichment statistics for amino acid counts? (Yes- AA, No- Nucleotide)" 8 78); then
+      type="counts.aa"
+    else
+      type="counts"
+    fi
+#        command="bash scripts_enrichments/modified_counts_bash.sh"
+        dir=$(whiptail --inputbox "Enter the filepath for the EasyDIVER output directory:" 10 60 3>&1 1>&2 2>&3)
+#        command+=" \"$dir\""
+      #!/bin/bash
+    {
+      echo type
+      outdir=$dir
+      counts_dir="$outdir/$type" # $outdir/counts or $outdir/counts.aa
 
+      # Get the maximum round
+      max_round=0
+      for file in "$counts_dir"/*-out_$type.txt; do
+          filename=$(basename "$file")
+          round=${filename%-out_$type.txt}
 
-function userKernelMode {
-	{	
-	raw=( $(grep "cpu " /proc/stat) )
-        userfirst=$((${raw[1]} + ${raw[2]}))
-        kernelfirst=${raw[3]}
-	echo 50
-        sleep 1
-	raw=( $(grep "cpu " /proc/stat) )
-        user=$(( $((${raw[1]} + ${raw[2]})) - $userfirst ))
-	echo 90
-        kernel=$(( ${raw[3]} - $kernelfirst ))
-        sum=$(($kernel + $user))
-        result="Percentage of last sekund in usermode: \
-        $((( $user*100)/$sum ))% \
-        \nand in kernelmode: $((($kernel*100)/$sum ))%"
-	echo $result > result
-	echo 100
-	} | whiptail --gauge "Getting data ..." 6 60 0
-} 
+          if [ $round -gt $max_round ]; then
+              max_round=$round
+          fi
+      done
+          progress=$((5))
+          echo $progress
+      # Check if there are any files matching the format "*-in_counts.aa.txt"
+      if [ ! -n "$(find "$counts_dir" -name "*-in_${type}.txt" -print -quit)" ]; then
+          # Cases 1A and 1B: Loop up to max_round - 1
+          for ((i = 1; i < max_round; i++)); do
+              # Run the modified_counts_bash.sh script with the appropriate arguments
+              if [ ! -n "$(find "$counts_dir" -name "*-neg_${type}.txt" -print -quit)" ]; then
+                python3 ./scripts_enrichments/modified_counts.py -out "$counts_dir/$i-out_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              else
+                python3 ./scripts_enrichments/modified_counts.py -out "$counts_dir/$i-out_$type.txt" -neg "$counts_dir/$(($i + 1))-neg_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              fi
 
-function interupts {
-	{
-	ints=$(vmstat 1 2 | tail -1 | awk '{print $11}')
-        result="Number of interupts in the last secound:  $ints"
-	echo 100
-	echo $result > result
-	} | whiptail --gauge "Getting data ..." 6 60 50
+              # Calculate progress
+              progress=$((i * 100 / (max_round - 1)))
+              echo $progress
+          done
+      else
+          # Case 2A and 2B: Loop up to max_round
+          for ((i = 1; i <= max_round; i++)); do
+              # Run the modified_counts_bash.sh script with the appropriate arguments
+              if [ ! -n "$(find "$counts_dir" -name "*-neg_${type}.txt" -print -quit)" ]; then
+                python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in_$type.txt" -out "$counts_dir/$i-out_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              else
+                python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in_$type.txt" -out "$counts_dir/$i-out_$type.txt" -neg "$counts_dir/$i-neg_$type.txt" -res "./scripts_enrichments/$i-res.txt"
+              fi
+
+              # Calculate progress
+              progress=$((i * 100 / max_round))
+              echo $progress
+          done
+      fi
+    }| whiptail --gauge "Finding enrichments..." 6 60 0
+    }
+}
+
+function graphFigures {
+  {
+    choice=$(whiptail --title "Graphs" --radiolist \
+    "Choose an option:" $LINES $COLUMNS $(( $LINES - 8 )) \
+    "Histogram" "Visualize sequence length distribution for a given output/histos folder" ON \
+    "Enrichment Scatterplot" "Plot negative control vs output enrichment of each sequence for a given round." OFF \
+    "AA Count Line Graph" "Plot unique and total amino acid counts across all rounds" OFF \
+    "Txt to Excel" "Convert a given enrichment result output (.txt), convert it to .xslx" OFF \
+    3>&1 1>&2 2>&3)
+    filepath=""
+    graph=""
+    if [ $? -eq 0 ]; then
+        if [ "$choice" == "Histogram" ]; then
+            filepath=$(whiptail --inputbox "Enter EasyDIVER output directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            graph="2"
+            python3 ./graphs.py "$filepath" "$graph" | whiptail --gauge "Graphing..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        elif [ "$choice" == "Enrichment Scatterplot" ]; then
+            filepath=$(whiptail --inputbox "Enter Enrichment result .txt filepath:" 10 60 3>&1 1>&2 2>&3)
+            graph="1"
+            python3 ./graphs.py "$filepath" "$graph" | whiptail --gauge "Graphing..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        elif [ "$choice" == "AA Count Line Graph" ]; then
+            filepath=$(whiptail --inputbox "Enter EasyDIVER output directory filepath:" 10 60 3>&1 1>&2 2>&3)
+            graph="3"
+            python3 ./graphs.py "$filepath" "$graph" | whiptail --gauge "Graphing..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        elif [ "$choice" == "Txt to Excel" ]; then
+            filepath=$(whiptail --inputbox "Enter Enrichment result .txt filepath:" 10 60 3>&1 1>&2 2>&3)
+#            lines=$(whiptail --inputbox "Enter number of xslx lines (4 - 1,000,000):" 10 60 3>&1 1>&2 2>&3)
+            python3 ./txt_to_xslx.py "$filepath" | whiptail --gauge "Working on it..." 6 60 0
+            whiptail --title "Finished" --msgbox "Look in the figures folder to find your output(s)!" 10 40
+        fi
+    else
+        echo "Operation canceled."
+    fi
+
+    }
 }
 
 ascii_art=(
@@ -74,7 +194,6 @@ $'
                    __/ |
                   |___/
                   '
-# ... (add more ASCII art pieces)
 )
 whiptail --title "Welcome" --msgbox "${ascii_art[0]}
 Welcome to the pipeline for Easy pre-processing and Dereplication of In Vitro Evolution Reads!\n\n
@@ -82,54 +201,49 @@ Press OK to continue." 30 85
 
 while [ 1 ];
 do
-eval `resize`
 CHOICE=$(
-whiptail --title "Operative Systems" --menu "Make your choice" $LINES $COLUMNS $(( $LINES - 8 )) \
-	"1)" "The name of this script."   \
-	"2)" "Time since last boot."  \
-	"3)" "Number of processes and threads." \
-	"4)" "Number of context switches in the last second." \
-	"5)" "How much time used in kernel mode and in user mode in the last second." \
-	"6)" "Number of interrupts in the last second." \
-	"9)" "End script"  3>&2 2>&1 1>&3
+whiptail --title "Main Menu" --menu "Choose an option:"  $LINES $COLUMNS $(( $LINES - 8 )) \
+	"1)" "Use EasyDIVER"   \
+	"2)" "Calculate enrichment statistics"  \
+	"3)" "Figures and Misc." \
+	"4)" "Help"  \
+	"5)" "End script"  3>&2 2>&1 1>&3
 )
 
-result=$(whoami)
+result=""
 case $CHOICE in
-	"1)")   
-		result="I am $result, the name of the script is start"
+	"1)")
+	  useEasyDiver
 	;;
 	"2)")   
-	        OP=$(uptime | awk '{print $3;}')
-		result="This system has been up $OP minutes"
+	  findEnrichments
 	;;
+	"3)")
+	  graphFigures
+  ;;
+	"4)")
+		result="EasyDIVER 2.0 is a Bash program that takes input files of selex round reads in fastq(.gz) format and analyzes them, providing
+sequence type and length distribution, joined reads, and/or enrichment information. There are also options to visualize sequence distribution,
+enrichment, and diversity data.
+v2.0 Author: Allison Tee and Celia Blanco
+contact: ateecup@stanford.edu or cblanco@chem.ucsb.edu
 
-	"3)")   
-	        p=$(ps ax | wc -l)
-                t=$(ps amx | wc -l)
-		result="Number of processes $p\nNumber os threads $t"
-        ;;
+	REQUIRED
+	Input directory filepath
 
-	"4)")   
-	        contextSwitch
-		read -r result < result
-        ;;
-
-	"5)")   
-                userKernelMode
-		read -r result < result
-        ;;
-
-	"6)")   
-		interupts
-		read -r result < result
-        ;;
-
-	"9)")
-		whiptail --msgbox "Thank you for using this script!" 20 78
-		exit
-        ;;
+	OPTIONAL MODIFIERS
+	Output directory filepath
+	Forward primer sequence for extraction
+	Reverse primer sequence for extraction
+	Translating to amino acids
+	Retaining individual lane outputs
+	# of threads
+	extra flags for PANDASeq (use quotes, e.g. \"-L 50\")"
+	whiptail --msgbox "$result" $LINES $COLUMNS $(( $LINES - 8 ))
+  ;;
+	"5)")
+		    exit
+  ;;
 esac
-whiptail --msgbox "$result" 20 78
 done
 exit

@@ -1,12 +1,39 @@
 #!/bin/bash
 
-python ./scripts_enrichments/modified_counts.py $1 $2 $3 $4 $5 $6 $7 $8 # .. when running easydiver
+outdir=$1
+counts_dir="$outdir/counts.aa" # $outdir/counts or $outdir/counts.aa
 
-#head -n3 $4 > final.txt
-#(tail -n+5 $4 | sort -k4 -n -r )  >> final.txt
-#mv final.txt $4;
+# Get the maximum round
+max_round=0
+for file in "$counts_dir"/*-out_counts.aa.txt; do
+    filename=$(basename "$file")
+    round=${filename%-out_counts.aa.txt}
 
-# Sort
-#header=$(head -n3 "$4")
-#echo "$header" > sorted.txt
-#tail -n+4 "$4" | sort -k10 -nr -k1,1 >> sorted.txt
+    if [ $round -gt $max_round ]; then
+        max_round=$round
+    fi
+done
+
+# Check if there are any files matching the format "*-in_counts.aa.txt"
+if [ ! -n "$(find "$counts_dir" -name '*-in_counts.aa.txt' -print -quit)" ]; then
+    # Cases 1A and 1B: Loop up to max_round - 1
+    for ((i = 1; i < max_round; i++)); do
+        # Run the modified_counts_bash.sh script with the appropriate arguments
+        if [ ! -n "$(find "$counts_dir" -name '*-neg_counts.aa.txt' -print -quit)" ]; then
+          python3 ./scripts_enrichments/modified_counts.py -out "$counts_dir/$i-out_counts.aa.txt" -res "./scripts_enrichments/$i-simple_res.txt"
+        else
+          python3 ./scripts_enrichments/modified_counts.py -out "$counts_dir/$i-out_counts.aa.txt" -neg "$counts_dir/$(($i + 1))-neg_counts.aa.txt" -res "./scripts_enrichments/$i-simple_res.txt"
+        fi
+    done
+else
+    # Case 2A and 2B: Loop up to max_round
+    for ((i = 1; i <= max_round; i++)); do
+        # Run the modified_counts_bash.sh script with the appropriate arguments
+        if [ ! -n "$(find "$counts_dir" -name '*-neg_counts.aa.txt' -print -quit)" ]; then
+          python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in_counts.aa.txt" -out "$counts_dir/$i-out_counts.aa.txt" -res "./scripts_enrichments/$i-simple_res.txt"
+        else
+          python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in_counts.aa.txt" -out "$counts_dir/$i-out_counts.aa.txt" -neg "$counts_dir/$i-neg_counts.aa.txt" -res "./scripts_enrichments/$i-simple_res.txt"
+        fi
+    done
+fi
+
