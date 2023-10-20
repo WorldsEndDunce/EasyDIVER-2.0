@@ -109,7 +109,7 @@ files = [in_file, neg_file, out_file]
 files_exist = [file is not None and os.path.exists(file) for file in files]
 
 all_dict = []
-totals = [] # in, neg, and then out total
+totals = [] # in, neg, and then out total, respectively
 uniques = []
 max_len = 0
 for i, in_file in enumerate(files):
@@ -180,11 +180,11 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         f_neg = 0
         c_neg = 0
 
-    # Bootstrap data
+    # Bootstrap data !!! Changed this part to make freqs make more sense according to abundances
     c_post_boot = bootstrap(c_post, totals[2])
-    f_post_boot = bootstrap(f_post, 1)
+    f_post_boot = [f_post, f_post - (c_post_boot[0] - c_post_boot[1]) / float(totals[2])]
     c_in_boot = bootstrap(c_in, totals[0])
-    f_in_boot = bootstrap(f_in, 1)
+    f_in_boot = [f_in, f_in - (c_in_boot[0] - c_in_boot[1]) / float(totals[0])]
     c_neg_boot = None
     f_neg_boot = None
 
@@ -206,7 +206,7 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         print(str(format_bootstrap(c_neg_boot)).ljust(15), end='\t', file=out)
         print(format_bootstrap(f_neg_boot).ljust(15), end='\t', file=out)
 
-    # Calculate and adjust enrichment in positive and negative pools
+    # !!! Calculate and adjust enrichment in positive and negative pools
     if f_in_boot[0] - f_in_boot[1] > 0:
         enr_post_min = max(0, (f_post_boot[0] - f_post_boot[1])) / (f_in_boot[0] + f_in_boot[1])  # Min enrichment due to selection - assumes smallest f_out and largest f_in
         enr_post_max = max(0, (f_post_boot[0] + f_post_boot[1])) / (f_in_boot[0] - f_in_boot[1])
@@ -217,19 +217,23 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         enr_post_max = 0
         enr_neg_min = 0
         enr_neg_max = 0
-    if enr_post_max > 0:
+
+    if enr_post_max > 0: # Makes sense to print enr_post
         print(str(f"[{enr_post_min:.8f}, {enr_post_max:.8f}]").ljust(15), end='\t\t', file=out)
     else:
         print('-'.ljust(15), end='\t\t', file=out)
 
-    if neg_file is not None:
+    if neg_file is not None: # 2A, 2B case check
         if enr_neg_max > 0:
             print(str(f"[{enr_neg_min:.8f}, {enr_neg_max:.8f}]").ljust(15), end='\t\t', file=out)
         else:
             print('-'.ljust(15), end='\t\t', file=out)
 
-    if enr_neg_max > 0 and enr_neg_min > 0:
-        print(str(f"[{enr_post_min / enr_neg_max:.8f}, {enr_post_max / enr_neg_min:.8f}]").ljust(15), file=out)
+    if enr_neg_max > 0:
+        enr_ratio_min = enr_post_min / enr_neg_max
+        enr_ratio_max = enr_post_max / enr_neg_min
+        # enr_ratio_bootstrap = bootstrap(enr_post_boot, 1)
+        print(str(f"[{enr_ratio_min:.8f}, {enr_ratio_max:.8f}]").ljust(15), file=out)
     elif neg_file is None:
         print(' '.ljust(15), file=out)
     else:
