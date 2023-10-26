@@ -16,7 +16,7 @@ from bootstrap import bootstrap
 # Helper function to format the bootstrap result as a string with a fixed width of 15 characters
 def format_bootstrap(result):
     if isinstance(result[0], int):
-        return f"{result[0]} ± {result[1]:.3f}"
+        return f"{result[0]} ± {result[1]}"
     return f"{result[0]:.8f} ± {result[1]:.6f}"
 
 # Helper function for multi-round cases (1A + 1B)
@@ -180,7 +180,7 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         f_neg = 0
         c_neg = 0
 
-    # Bootstrap data !!! Changed this part to make freqs make more sense according to abundances
+    # Bootstrap data !!! Changed this part to make freq ranges make more sense according to abundances
     c_post_boot = bootstrap(c_post, totals[2])
     f_post_boot = [f_post, f_post - (c_post_boot[0] - c_post_boot[1]) / float(totals[2])]
     c_in_boot = bootstrap(c_in, totals[0])
@@ -229,7 +229,7 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         else:
             print('-'.ljust(15), end='\t\t', file=out)
 
-    if enr_neg_max > 0:
+    if enr_neg_max > 0 and enr_neg_min > 0:
         enr_ratio_min = enr_post_min / enr_neg_max
         enr_ratio_max = enr_post_max / enr_neg_min
         # enr_ratio_bootstrap = bootstrap(enr_post_boot, 1)

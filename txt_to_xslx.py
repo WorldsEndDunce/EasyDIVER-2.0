@@ -9,7 +9,7 @@ import sys
 # Read the text file
 input_file = sys.argv[1] # 'res.txt'
 line_limit = 1000 # up to 1,000,000
-# input_file = "scripts_enrichments/1-res.txt"
+# input_file = "scripts_enrichments/2-res.txt"
 data = []
 with open(input_file, "r", encoding="utf-8") as file:
     i = 0
@@ -25,7 +25,7 @@ columns = ["col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9
 df = pd.DataFrame(data, columns=columns)
 #
 # # Specify the output Excel file
-output_file = 'figures/output.xlsx'  # Replace with your desired output Excel file
+output_file = 'figures/' + input_file.split('/')[-1].split('.')[0] + '.xlsx'  # Excel file named accordingly
 #
 # Save DataFrame to Excel
 df.to_excel(output_file, index=False)
