@@ -1,7 +1,7 @@
 #!/bin/bash
 
 outdir=$1
-counts_type=$2 # $outdir/counts or $outdir/counts
+counts_type=$2 # counts or counts.aa
 counts_dir="$1/$2"
 
 # Get the maximum round

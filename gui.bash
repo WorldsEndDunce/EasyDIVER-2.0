@@ -1,4 +1,6 @@
 #! /bin/bash
+LINES=$(tput lines)
+COLUMNS=$(tput cols)
 
 # Define colors for the terminal interface
 export NEWT_COLORS='
