@@ -15,9 +15,11 @@ from bootstrap import bootstrap
 
 # Helper function to format the bootstrap result as a string with a fixed width of 15 characters
 def format_bootstrap(result):
+    if result[0] == 0 and result[1] != 0:
+        return "[0.000000, 0.000000]"
     if isinstance(result[0], int):
-        return f"{result[0]} ± {result[1]}"
-    return f"{result[0]:.8f} ± {result[1]:.6f}"
+        return f"[{max(result[0] - result[1], 1)}, {result[0] + result[1]}]" # Min is 1, TODO: Calculate f accordingly
+    return f"[{(max(result[0] - result[1], 0.000001)):.6f}, {(result[0] + result[1]):.6f}]"
 
 # Helper function for multi-round cases (1A + 1B)
 def next_round_file(input_str):
@@ -36,8 +38,8 @@ def next_round_file(input_str):
 
     return input_str  # Return the original string if no match found
 
-if not os.path.exists("modified_counts"):
-    os.makedirs("modified_counts")
+# if not os.path.exists("modified_counts"):
+#     os.makedirs("modified_counts")
 
 start = time()
 
@@ -144,19 +146,36 @@ print("Max length sequence:", max_len)
 out = open(res_file,'w')
 print(str('number of unique sequences = ') + str(uniques[-1]), file=out) # Changed to -1
 print(str('total number of molecules = ') + str(totals[-1]), end='\n', file=out)
-print(str('seq').ljust(max_len), end='\t', file=out)
-print(str('a_in').ljust(10), end='\t\t', file=out)
-print(str('f_in').ljust(15), end='\t\t', file=out)
-print(str(str('a_out')).ljust(10), end='\t\t', file=out)
-print(str(str('f_out')).ljust(15), end='\t\t', file=out)
+if in_file is not None:
+    print(str('number of unique sequences (input) = ') + str(uniques[0]), file=out)
+    print(str('total number of molecules (input) = ') + str(totals[0]), end='\n', file=out)
 if neg_file is not None:
-    print(str(str('a_neg')).ljust(10), end='\t\t', file=out)
-    print(str(str('f_neg')).ljust(15), end='\t\t', file=out)
+    print(str('number of unique sequences (neg control) = ') + str(uniques[1]), file=out)
+    print(str('total number of molecules (neg control) = ') + str(totals[1]), end='\n', file=out)
 
-print(str(str('e_out')).ljust(15), end='\t\t', file=out)
+print(str('seq').ljust(max_len), end='\t', file=out)
+print(str('a_in').ljust(5), end='\t\t', file=out)
+print(str('a_in (95 CI)').ljust(5), end='\t\t', file=out)
+print(str('f_in').ljust(5), end='\t\t', file=out)
+print(str('f_in (95 CI)').ljust(10), end='\t\t', file=out)
+print(str(str('a_out')).ljust(5), end='\t\t', file=out)
+print(str('a_out (95 CI)').ljust(10), end='\t\t', file=out)
+print(str(str('f_out')).ljust(10), end='\t\t', file=out)
+print(str(str('f_out (95 CI)')).ljust(10), end='\t\t', file=out)
 if neg_file is not None:
-    print(str(str('e_n')).ljust(15), end='\t\t', file=out)
-    print(str(str(str('e_out')) + ("/") + str(str('e_n'))).ljust(15), end='\n', file=out)
+    print(str(str('a_neg')).ljust(5), end='\t\t', file=out)
+    print(str(str('a_neg (95 CI)')).ljust(10), end='\t\t', file=out)
+    print(str(str('f_neg')).ljust(10), end='\t\t', file=out)
+    print(str(str('f_neg (95 CI)')).ljust(10), end='\t\t', file=out)
+    print(str(str('e_out')).ljust(10), end='\t\t', file=out)
+    print(str(str('e_out (interval)')).ljust(10), end='\t\t', file=out)
+if neg_file is not None:
+    print(str(str('e_n')).ljust(10), end='\t\t', file=out)
+    print(str(str('e_n (interval)')).ljust(10), end='\t\t', file=out)
+    print(str(str(str('e_out')) + ("/") + str(str('e_n'))).ljust(10), end='\t\t', file=out)
+    print(str(str(str('e_out')) + ("/") + str(str('e_n (interval)'))).ljust(10), end='\n', file=out)
+else:
+    print("\n")
 
 for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a_out, etc. stats
     f_post = all_dict[-1][seq][1]
@@ -194,24 +213,29 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         print("Found \"" + my_sequences.seq_nicknames[seq] + "\" " + format_bootstrap(c_post_boot) + " times with " + format_bootstrap(f_post_boot) + " frequency.")
     else:
         print(str(seq).ljust(max_len), end='\t', file=out)
-
+    print(str(c_in_boot[0]).ljust(10), end='\t', file=out)
     print(format_bootstrap(c_in_boot).ljust(15), end='\t', file=out)
+    print(str(f"{f_in_boot[0]:.6f}").ljust(10), end='\t', file=out)
     print(format_bootstrap(f_in_boot).ljust(15), end='\t', file=out)
+    print(str(c_post_boot[0]).ljust(10), end='\t', file=out)
     print(format_bootstrap(c_post_boot).ljust(15), end='\t', file=out)
+    print(str(f"{f_post_boot[0]:.6f}").ljust(10), end='\t', file=out)
     print(format_bootstrap(f_post_boot).ljust(15), end='\t', file=out)
 
     if neg_file is not None:
         c_neg_boot = bootstrap(c_neg, totals[1])
         f_neg_boot = bootstrap(f_neg, 1)
+        print(str(c_neg_boot[0]).ljust(10), end='\t', file=out)
         print(str(format_bootstrap(c_neg_boot)).ljust(15), end='\t', file=out)
+        print(str(f"{f_neg_boot[0]:.6f}").ljust(10), end='\t', file=out)
         print(format_bootstrap(f_neg_boot).ljust(15), end='\t', file=out)
 
     # !!! Calculate and adjust enrichment in positive and negative pools
-    if f_in_boot[0] - f_in_boot[1] > 0:
+    if f_in_boot[0] + f_in_boot[1] > 0: # If the max is more than 1, we've set the min to more than 1
         enr_post_min = max(0, (f_post_boot[0] - f_post_boot[1])) / (f_in_boot[0] + f_in_boot[1])  # Min enrichment due to selection - assumes smallest f_out and largest f_in
-        enr_post_max = max(0, (f_post_boot[0] + f_post_boot[1])) / (f_in_boot[0] - f_in_boot[1])
+        enr_post_max = max(0, (f_post_boot[0] + f_post_boot[1])) / max(f_in_boot[0] - f_in_boot[1], 0.000001)
         enr_neg_min = max(0, (f_neg_boot[0] - f_neg_boot[1])) / (f_in_boot[0] + f_in_boot[1])
-        enr_neg_max = max(0, (f_neg_boot[0] + f_neg_boot[1])) / (f_in_boot[0] - f_in_boot[1])
+        enr_neg_max = max(0, (f_neg_boot[0] + f_neg_boot[1])) / max(f_in_boot[0] - f_in_boot[1], 0.000001)
     else: # Not enough data to make an estimate
         enr_post_min = 0
         enr_post_max = 0
@@ -219,13 +243,17 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         enr_neg_max = 0
 
     if enr_post_max > 0: # Makes sense to print enr_post
-        print(str(f"[{enr_post_min:.8f}, {enr_post_max:.8f}]").ljust(15), end='\t\t', file=out)
+        enr_post = f_post_boot[0] / f_in_boot[0]
+        print(str(f"{enr_post:.6f}").ljust(10), end='\t\t', file=out)
+        print(str(f"[{enr_post_min:.6f}, {enr_post_max:.6f}]").ljust(15), end='\t\t', file=out)
     else:
         print('-'.ljust(15), end='\t\t', file=out)
 
     if neg_file is not None: # 2A, 2B case check
         if enr_neg_max > 0:
-            print(str(f"[{enr_neg_min:.8f}, {enr_neg_max:.8f}]").ljust(15), end='\t\t', file=out)
+            enr_neg = f_neg_boot[0] / f_in_boot[0]
+            print(str(f"{enr_neg:.6f}").ljust(10), end='\t\t', file=out)
+            print(str(f"[{enr_neg_min:.6f}, {enr_neg_max:.6f}]").ljust(15), end='\t\t', file=out)
         else:
             print('-'.ljust(15), end='\t\t', file=out)
 
@@ -233,7 +261,8 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
         enr_ratio_min = enr_post_min / enr_neg_max
         enr_ratio_max = enr_post_max / enr_neg_min
         # enr_ratio_bootstrap = bootstrap(enr_post_boot, 1)
-        print(str(f"[{enr_ratio_min:.8f}, {enr_ratio_max:.8f}]").ljust(15), file=out)
+        print(str(f"{enr_post / enr_neg:.6f}").ljust(10), end='\t\t', file=out)
+        print(str(f"[{enr_ratio_min:.6f}, {enr_ratio_max:.6f}]").ljust(15), end='\n', file=out)
     elif neg_file is None:
         print(' '.ljust(15), file=out)
     else:

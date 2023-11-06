@@ -53,10 +53,10 @@ def translate_dna_single(dna, frame=1):
     amino_acids = ''
     for codon in codons:
         if translate_codon(codon) == "_":
-        	#print "stop"
-        	break
+            amino_acids += "*" # Modified stop codons
+            break
         else:
-        	amino_acids = amino_acids + translate_codon(codon)
+        	amino_acids += translate_codon(codon)
     return amino_acids
 
 #input file name

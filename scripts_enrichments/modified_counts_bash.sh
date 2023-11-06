@@ -6,10 +6,9 @@ counts_dir="$1/$2"
 
 # Get the maximum round
 max_round=0
-for file in "$counts_dir"/*-out_counts.txt; do
+for file in "$counts_dir"/*-out_$counts_type.txt; do
     filename=$(basename "$file")
-    round=${filename%-out_counts.txt}
-
+    round=${filename%%-out_*}
     if [ $round -gt $max_round ]; then
         max_round=$round
     fi

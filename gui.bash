@@ -111,7 +111,7 @@ function findEnrichments {
           filename=$(basename "$file")
           round=${filename%-out_$type.txt}
 
-          if [ $round -gt $max_round ]; then
+          if [ $round -gt $max_round ]; then # Problem line
               max_round=$round
           fi
       done
@@ -238,7 +238,7 @@ case $CHOICE in
 sequence type and length distribution, joined reads, and/or enrichment information. There are also options to visualize sequence distribution,
 enrichment, and diversity data.
 v2.0 Author: Allison Tee and Celia Blanco
-contact: ateecup@stanford.edu or cblanco@chem.ucsb.edu
+contact: ateecup@stanford.edu or celia.blanco@bmsis.org
 
 	REQUIRED
 	Input directory filepath
