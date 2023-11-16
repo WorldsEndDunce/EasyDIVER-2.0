@@ -34,7 +34,7 @@ else
         if [ ! -n "$(find "$counts_dir" -name "$neg_format" -print -quit)" ]; then
           python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in*_$counts_type.txt" -out "$counts_dir/$i-out"*"_$counts_type.txt" -res "modified_counts/$i-res.txt"
         else
-          python3 ./scripts_enrichments/modified_counts.py -in "$counts_dir/$i-in"*"_$counts_type.txt" -out "$counts_dir/$i-out"*"_$counts_type.txt" -neg "$counts_dir/$i-neg"*"_$counts_type.txt" -res "$outdir/modified_counts/$i-res.txt"
+          python3 ./scripts/modified_counts.py -in "$counts_dir/$i-in"*"_$counts_type.txt" -out "$counts_dir/$i-out"*"_$counts_type.txt" -neg "$counts_dir/$i-neg"*"_$counts_type.txt" -res "$outdir/modified_counts/$i-res.txt"
         fi
     done
 fi
