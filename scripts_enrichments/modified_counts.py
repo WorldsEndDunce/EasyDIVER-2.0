@@ -14,36 +14,42 @@ from bootstrap import bootstrap
 # os.chdir(data_dir)
 
 # Helper function to format the bootstrap result as a string with a fixed width of 15 characters
-def format_bootstrap(result):
-    if result[0] == 0 and result[1] != 0:
-        return "[0.000000, 0.000000]"
-    if isinstance(result[0], int):
-        return f"[{max(result[0] - result[1], 1)}, {result[0] + result[1]}]" # Min is 1, TODO: Calculate f accordingly
-    return f"[{(max(result[0] - result[1], 0.000001)):.6f}, {(result[0] + result[1]):.6f}]"
+def format_bootstrap(result, type):
+    if type == 'a': # For abundances
+        if result[0] == 0 and result[1] == 0: # We did not observe this
+            return "[0, 0]"
+        else:
+            return f"[{max(result[0] - result[1], 1)}, {result[0] + result[1]}]" # Min is 1, TODO: Calculate f accordingly
+    else:
+        if result[0] == 0 and result[1] == 0: # We did not observe this
+            return "[0.000000, 0.000000]"
+        else:
+            return f"[{(max(result[0] - result[1], 0.000001)):.6f}, {(result[0] + result[1]):.6f}]"
 
-# Helper function for multi-round cases (1A + 1B)
+# Helper function for multi-round cases (1A + 1B) to find the prefix for the next round and then find the file associated
 def next_round_file(input_str):
     # Find the index of the last slash in the string to isolate the directory path
     last_slash_index = input_str.rfind('/')
-    directory_path = input_str[:last_slash_index + 1] if last_slash_index != -1 else ''
+    directory = input_str[:last_slash_index + 1] if last_slash_index != -1 else ''
 
-    # Use regular expression to find the number before "-out.txt" in the filename
-    match = re.search(r'(\d+)-out\.txt$', input_str)
+    # Use regular expression to find the number before "-out[whatever].txt" in the filename
+    match = re.search(r'(\d+)-out.*\.txt$', input_str)
     if match:
         number = int(match.group(1))  # Extract the integer part
         incremented_number = str(number + 1)  # Increment the integer and convert it back to string
-        new_filename = incremented_number + '-out.txt'
+        file_pre = incremented_number + '-out'
+        # return file_pre # directory_path + input_str[last_slash_index + 1:].replace(match.group(0), new_filename)
+    else:
+        return None # No match found
 
-        return directory_path + input_str[last_slash_index + 1:].replace(match.group(0), new_filename)
+    for file in os.listdir(directory):
+        if file.startswith(file_pre) and file.endswith('.txt'):
+            return os.path.join(directory, file) # directory + input_str[last_slash_index + 1:].replace(match.group(0), file)
+    return None
 
-    return input_str  # Return the original string if no match found
-
-# if not os.path.exists("modified_counts"):
-#     os.makedirs("modified_counts")
 
 start = time()
 
-# Check the number of command-line arguments
 print()
 print("###########################################################################################################################################################")
 print("Hello! This is a script that computes enrichment statistics for an in-vitro selection experiment.")
@@ -89,7 +95,10 @@ if out_file is None:
 if res_file is None:
     res_file = "results.txt"
 
-# Cases 1A and 1B
+if not os.path.exists(os.path.split(res_file)[0]):
+    os.makedirs(os.path.split(res_file)[0])
+
+# Cases 1A and 1B, no separate in file
 if in_file is None:
     if neg_file is None:
         print("Now computing enrichments for Case 1A...")
@@ -108,6 +117,7 @@ current_dir = os.getcwd()  # Debugging purposes
 print("The current directory is: " + current_dir)
 
 files = [in_file, neg_file, out_file]
+print(files)
 files_exist = [file is not None and os.path.exists(file) for file in files]
 
 all_dict = []
@@ -210,25 +220,25 @@ for seq in all_dict[-1]: # Originally 2. Calculate each sequence's a_in, f_in, a
     # Write data to file
     if seq in my_sequences.seq_nicknames:
         print(str(my_sequences.seq_nicknames[seq]).ljust(max_len), end='\t', file=out)
-        print("Found \"" + my_sequences.seq_nicknames[seq] + "\" " + format_bootstrap(c_post_boot) + " times with " + format_bootstrap(f_post_boot) + " frequency.")
+        print("Found \"" + my_sequences.seq_nicknames[seq] + "\" " + format_bootstrap(c_post_boot, 'a') + " times with " + format_bootstrap(f_post_boot, 'f') + " frequency.")
     else:
         print(str(seq).ljust(max_len), end='\t', file=out)
     print(str(c_in_boot[0]).ljust(10), end='\t', file=out)
-    print(format_bootstrap(c_in_boot).ljust(15), end='\t', file=out)
+    print(format_bootstrap(c_in_boot, 'a').ljust(15), end='\t', file=out)
     print(str(f"{f_in_boot[0]:.6f}").ljust(10), end='\t', file=out)
-    print(format_bootstrap(f_in_boot).ljust(15), end='\t', file=out)
+    print(format_bootstrap(f_in_boot, 'f').ljust(15), end='\t', file=out)
     print(str(c_post_boot[0]).ljust(10), end='\t', file=out)
-    print(format_bootstrap(c_post_boot).ljust(15), end='\t', file=out)
+    print(format_bootstrap(c_post_boot, 'a').ljust(15), end='\t', file=out)
     print(str(f"{f_post_boot[0]:.6f}").ljust(10), end='\t', file=out)
-    print(format_bootstrap(f_post_boot).ljust(15), end='\t', file=out)
+    print(format_bootstrap(f_post_boot, 'f').ljust(15), end='\t', file=out)
 
     if neg_file is not None:
         c_neg_boot = bootstrap(c_neg, totals[1])
         f_neg_boot = bootstrap(f_neg, 1)
         print(str(c_neg_boot[0]).ljust(10), end='\t', file=out)
-        print(str(format_bootstrap(c_neg_boot)).ljust(15), end='\t', file=out)
+        print(str(format_bootstrap(c_neg_boot, 'a')).ljust(15), end='\t', file=out)
         print(str(f"{f_neg_boot[0]:.6f}").ljust(10), end='\t', file=out)
-        print(format_bootstrap(f_neg_boot).ljust(15), end='\t', file=out)
+        print(format_bootstrap(f_neg_boot, 'f').ljust(15), end='\t', file=out)
 
     # !!! Calculate and adjust enrichment in positive and negative pools
     if f_in_boot[0] + f_in_boot[1] > 0: # If the max is more than 1, we've set the min to more than 1

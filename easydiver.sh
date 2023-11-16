@@ -479,7 +479,7 @@ if [ -z $prot ];
 	else
 		mkdir counts.aa
 		mv counts/*aa.txt counts.aa/
-		mv counts/*aa.dup.txt counts.aa/
+	#	mv counts/*aa.dup.txt counts.aa/
 		mv counts/*aa_histo.txt histos/
 fi
 progress=$((85))

@@ -4,7 +4,7 @@ def bootstrap(count, total, depth=1000, smoothing=1, seed=42):
     if seed is not None:
         np.random.seed(seed)  # Set random seed to ensure consistent error margins
     if total != 1: # Not a decimal
-        # Laplace smoothing-- Note: Take out
+        # Laplace smoothing-- Note: Removed
         smoothed_count = count # + smoothing
         smoothed_total = total # + 2 * smoothing
         # Simulate the binomial distribution
