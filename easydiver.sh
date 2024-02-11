@@ -28,6 +28,9 @@ where:
 # Record start time in seconds to calculate run time at the end
 start=`date +%s`
 
+# Record workking directory
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
 # Test to verify pandaseq is installed and can be found
 pandatest=$(which pandaseq)
 
@@ -427,11 +430,8 @@ if [ -z $prot ];
 	else
 
 	# Translate into aa
-	echo "Translating ${file//_counts.txt} DNA to peptides..."
-	translator_dir="$hdir/translator.py"
-	# echo "$translator_dir"
-	python ${translator_dir} $file # Translator.py call
-
+	echo "Translating ${file//_counts.txt} DNA to peptides..."	
+ 	python "$SCRIPT_DIR/translator.py" $file
 
 	# Print in new file every line except the first 3 (2 with the number of molecules and sequences and town empty lines):
 	tail -n +4 ${file//_counts.txt}'_counts.aa.dup.txt' | sort > newfile.txt;
@@ -481,7 +481,6 @@ if [ -z $prot ];
 	else
 		mkdir counts.aa
 		mv counts/*aa.txt counts.aa/
-	#	mv counts/*aa.dup.txt counts.aa/
 		mv counts/*aa_histo.txt histos/
 fi
 progress=$((90))
